@@ -9,7 +9,8 @@ urlpatterns = [
     path("api/core/", include("core.urls")),
     path("api/", include("workflows.urls")),
     path("api/", include("projects.urls")),
-    # later: inventory/products/sales
+    path("api/", include("products.urls")),
+    # later: inventory, sales
 ]
 
 if settings.DEBUG:
