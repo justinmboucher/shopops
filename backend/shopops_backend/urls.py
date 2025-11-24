@@ -8,7 +8,8 @@ urlpatterns = [
 
     path("api/core/", include("core.urls")),
     path("api/", include("workflows.urls")),
-    # Add inventory/products/projects/sales here
+    path("api/", include("projects.urls")),
+    # later: inventory/products/sales
 ]
 
 if settings.DEBUG:
