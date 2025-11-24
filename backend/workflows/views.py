@@ -2,6 +2,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from .models import WorkflowDefinition
 
 from core.models import Shop
 from workflows.models import WorkflowDefinition
@@ -20,28 +21,28 @@ class WorkflowDefinitionViewSet(viewsets.ReadOnlyModelViewSet):
     - GET /api/workflows/{id}/     -> workflow detail
     - GET /api/workflows/{id}/board/ -> board data (stages + projects)
     """
-
+    queryset = WorkflowDefinition.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = WorkflowDefinitionSerializer
 
-    def get_queryset(self):
-        user = self.request.user
+    # def get_queryset(self):
+    #     user = self.request.user
 
-        # If user isn't authenticated, DRF will block earlier via permissions,
-        # but we'll be defensive anyway.
-        if not user.is_authenticated:
-            return WorkflowDefinition.objects.none()
+    #     # If user isn't authenticated, DRF will block earlier via permissions,
+    #     # but we'll be defensive anyway.
+    #     if not user.is_authenticated:
+    #         return WorkflowDefinition.objects.none()
 
-        # Try to get the user's shop; if missing, return empty queryset
-        try:
-            shop = user.shop
-        except Shop.DoesNotExist:
-            # For now: no shop -> no workflows
-            return WorkflowDefinition.objects.none()
+    #     # Try to get the user's shop; if missing, return empty queryset
+    #     try:
+    #         shop = user.shop
+    #     except Shop.DoesNotExist:
+    #         # For now: no shop -> no workflows
+    #         return WorkflowDefinition.objects.none()
 
-        return WorkflowDefinition.objects.filter(shop=shop, is_active=True).order_by(
-            "name"
-        )
+    #     return WorkflowDefinition.objects.filter(shop=shop, is_active=True).order_by(
+    #         "name"
+    #     )
 
     @action(detail=True, methods=["get"])
     def board(self, request, pk=None):
