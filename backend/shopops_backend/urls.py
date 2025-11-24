@@ -5,13 +5,10 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+
     path("api/core/", include("core.urls")),
-    # We'll later add:
-    # path("api/workflows/", include("workflows.urls")),
-    # path("api/inventory/", include("inventory.urls")),
-    # path("api/products/", include("products.urls")),
-    # path("api/projects/", include("projects.urls")),
-    # path("api/sales/", include("sales.urls")),
+    path("api/", include("workflows.urls")),
+    # Add inventory/products/projects/sales here
 ]
 
 if settings.DEBUG:
