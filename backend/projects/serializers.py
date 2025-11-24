@@ -4,6 +4,8 @@ from core.models import Customer
 from products.models import ProductTemplate
 from workflows.models import WorkflowDefinition, WorkflowStage
 from projects.models import Project
+from rest_framework import serializers as drf_serializers
+from sales.models import Sale
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -159,3 +161,26 @@ class ProjectSerializer(serializers.ModelSerializer):
 
         # Optionally, create initial ProjectStageHistory row later if desired
         return project
+
+class LogSaleSerializer(drf_serializers.Serializer):
+    price = drf_serializers.DecimalField(
+        max_digits=10, decimal_places=2
+    )
+    channel = drf_serializers.ChoiceField(
+        choices=[c[0] for c in Sale.CHANNEL_CHOICES],
+        default="other",
+    )
+    fees = drf_serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        allow_null=True,
+    )
+    sold_at = drf_serializers.DateTimeField(
+        required=False,
+        help_text="If omitted, defaults to now.",
+    )
+    notes = drf_serializers.CharField(
+        required=False,
+        allow_blank=True,
+    )

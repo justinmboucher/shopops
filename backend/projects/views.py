@@ -7,9 +7,10 @@ from rest_framework.response import Response
 
 from core.models import Shop
 from projects.models import Project
-from projects.serializers import ProjectSerializer
+from projects.serializers import ProjectSerializer, LogSaleSerializer
 from workflows.models import WorkflowStage, ProjectStageHistory
-
+from sales.models import Sale
+from sales.serializers import SaleSerializer
 
 class ProjectViewSet(viewsets.ModelViewSet):
     """
@@ -139,7 +140,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(project)
         return Response(serializer.data, status=status.HTTP_200_OK)
     @action(detail=True, methods=["post"])
-    
+
     def cancel(self, request, pk=None):
         """
         Cancel a project (client bailed, etc.).
@@ -205,3 +206,75 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(project)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"])
+    def log_sale(self, request, pk=None):
+        """
+        Log a sale for this project and mark it as completed.
+
+        Expected payload:
+        {
+          "price": 180.00,
+          "channel": "etsy",
+          "fees": 12.50,                  # optional
+          "sold_at": "2025-11-24T19:30:00Z",  # optional, defaults to now
+          "notes": "Sold at the holiday market."  # optional
+        }
+        """
+        project: Project = self.get_object()
+
+        if project.status == "cancelled":
+            return Response(
+                {"detail": "Cannot log a sale for a cancelled project."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if project.status == "completed":
+            # You could allow multiple sales per project, but for MVP we treat this as 1-to-1
+            return Response(
+                {"detail": "This project is already completed. A sale may already exist."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        input_serializer = LogSaleSerializer(data=request.data)
+        input_serializer.is_valid(raise_exception=True)
+        data = input_serializer.validated_data
+
+        user = request.user
+        try:
+            shop: Shop = user.shop
+        except Shop.DoesNotExist:
+            return Response(
+                {"detail": "Current user has no shop configured."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        sold_at = data.get("sold_at") or timezone.now()
+
+        sale = Sale.objects.create(
+            shop=shop,
+            project=project,
+            template=project.template,
+            customer=project.customer,
+            channel=data.get("channel", "other"),
+            price=data["price"],
+            fees=data.get("fees"),
+            currency=shop.currency,
+            sold_at=sold_at,
+            notes=data.get("notes", ""),
+        )
+
+        # Mark project completed
+        project.status = "completed"
+        project.save(update_fields=["status", "updated_at"])
+
+        project_serializer = self.get_serializer(project)
+        sale_serializer = SaleSerializer(sale)
+
+        return Response(
+            {
+                "project": project_serializer.data,
+                "sale": sale_serializer.data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
