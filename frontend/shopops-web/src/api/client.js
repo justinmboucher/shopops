@@ -16,11 +16,9 @@ api.interceptors.request.use(
     const token = localStorage.getItem("access");
     if (isLikelyJwt(token)) {
       config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      // If something weird is in there, clear it so it stops breaking everything
-      if (token) {
-        localStorage.removeItem("access");
-      }
+    } else if (token) {
+      // Old/non-JWT token hanging around? Clean it up so it doesn't break stuff.
+      localStorage.removeItem("access");
     }
     return config;
   },
