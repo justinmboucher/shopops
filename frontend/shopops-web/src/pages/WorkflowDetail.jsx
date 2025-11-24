@@ -1,25 +1,35 @@
+// src/pages/WorkflowDetail.jsx
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { fetchWorkflow } from "../api/workflows";
+import { useNavigate, useParams } from "react-router-dom";
+import { fetchWorkflow, updateWorkflow } from "../api/workflows";
 
 function WorkflowDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [workflow, setWorkflow] = useState(null);
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+  });
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let ignore = false;
 
-    async function loadWorkflow() {
+    async function load() {
       try {
         setLoading(true);
         setError(null);
         const data = await fetchWorkflow(id);
         if (!ignore) {
           setWorkflow(data);
+          setForm({
+            name: data.name || "",
+            description: data.description || "",
+          });
         }
       } catch (err) {
         if (!ignore) {
@@ -35,15 +45,40 @@ function WorkflowDetail() {
       }
     }
 
-    loadWorkflow();
+    load();
 
     return () => {
       ignore = true;
     };
   }, [id]);
 
-  const handleBack = () => {
-    navigate("/workflows");
+  const handleChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setError(null);
+      const payload = {
+        ...workflow,
+        name: form.name,
+        description: form.description,
+      };
+      const updated = await updateWorkflow(id, payload);
+      setWorkflow(updated);
+      // Could show a toast; for now, go back to list
+      navigate("/workflows");
+    } catch (err) {
+      const message =
+        err.response?.data?.detail ||
+        err.response?.data?.error ||
+        err.message ||
+        "Failed to save workflow";
+      setError(message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -53,21 +88,6 @@ function WorkflowDetail() {
   if (error) {
     return (
       <div>
-        <button
-          type="button"
-          onClick={handleBack}
-          style={{
-            marginBottom: "1rem",
-            padding: "0.25rem 0.6rem",
-            borderRadius: "0.5rem",
-            border: "1px solid #d1d5db",
-            background: "#f9fafb",
-            fontSize: "0.8rem",
-            cursor: "pointer",
-          }}
-        >
-          ← Back to workflows
-        </button>
         <h2>Workflow</h2>
         <p style={{ color: "crimson" }}>Error: {error}</p>
       </div>
@@ -77,167 +97,123 @@ function WorkflowDetail() {
   if (!workflow) {
     return (
       <div>
-        <button
-          type="button"
-          onClick={handleBack}
-          style={{
-            marginBottom: "1rem",
-            padding: "0.25rem 0.6rem",
-            borderRadius: "0.5rem",
-            border: "1px solid #d1d5db",
-            background: "#f9fafb",
-            fontSize: "0.8rem",
-            cursor: "pointer",
-          }}
-        >
-          ← Back to workflows
-        </button>
-        <p>Workflow not found.</p>
+        <h2>Workflow</h2>
+        <p>No workflow found.</p>
       </div>
     );
   }
 
-  const { name, description, is_default, is_active, created_at, updated_at } = workflow;
-
   return (
     <div>
-      <button
-        type="button"
-        onClick={handleBack}
+      <h2 style={{ marginTop: 0 }}>Edit workflow</h2>
+      <p
         style={{
-          marginBottom: "1rem",
-          padding: "0.25rem 0.6rem",
-          borderRadius: "0.5rem",
-          border: "1px solid #d1d5db",
-          background: "#f9fafb",
-          fontSize: "0.8rem",
-          cursor: "pointer",
+          margin: "0.25rem 0 1rem",
+          fontSize: "0.9rem",
+          color: "#6b7280",
         }}
       >
-        ← Back to workflows
-      </button>
+        Adjust the basic details for this workflow.
+      </p>
 
       <div
         style={{
-          borderRadius: "0.9rem",
-          border: "1px solid #e5e7eb",
-          padding: "1.25rem",
-          background: "#ffffff",
-          boxShadow: "0 1px 3px rgba(15, 23, 42, 0.12)",
           maxWidth: "640px",
+          borderRadius: "0.75rem",
+          border: "1px solid #e5e7eb",
+          padding: "1rem",
+          background: "#ffffff",
+          boxShadow: "0 1px 2px rgba(15, 23, 42, 0.08)",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            gap: "1rem",
-          }}
-        >
-          <div>
-            <h2 style={{ margin: 0 }}>{name}</h2>
-            {description && (
-              <p
-                style={{
-                  margin: "0.5rem 0 0",
-                  fontSize: "0.9rem",
-                  color: "#4b5563",
-                }}
-              >
-                {description}
-              </p>
-            )}
-          </div>
-          <div
+        <div style={{ marginBottom: "0.75rem" }}>
+          <label
             style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "0.25rem",
-              justifyContent: "flex-end",
+              display: "block",
+              fontSize: "0.85rem",
+              marginBottom: "0.25rem",
             }}
           >
-            {is_default && (
-              <span
-                style={{
-                  fontSize: "0.7rem",
-                  padding: "0.15rem 0.4rem",
-                  borderRadius: "999px",
-                  background: "#eef2ff",
-                  color: "#3730a3",
-                  border: "1px solid #c7d2fe",
-                }}
-              >
-                Default
-              </span>
-            )}
-            <span
-              style={{
-                fontSize: "0.7rem",
-                padding: "0.15rem 0.4rem",
-                borderRadius: "999px",
-                background: is_active ? "#ecfdf3" : "#f9fafb",
-                color: is_active ? "#166534" : "#6b7280",
-                border: `1px solid ${is_active ? "#bbf7d0" : "#e5e7eb"}`,
-              }}
-            >
-              {is_active ? "Active" : "Inactive"}
-            </span>
-          </div>
+            Name
+          </label>
+          <input
+            type="text"
+            value={form.name}
+            onChange={(e) => handleChange("name", e.target.value)}
+            style={{
+              width: "100%",
+              padding: "0.4rem 0.5rem",
+              borderRadius: "0.5rem",
+              border: "1px solid #d1d5db",
+              fontSize: "0.9rem",
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: "0.75rem" }}>
+          <label
+            style={{
+              display: "block",
+              fontSize: "0.85rem",
+              marginBottom: "0.25rem",
+            }}
+          >
+            Description
+          </label>
+          <textarea
+            rows={3}
+            value={form.description}
+            onChange={(e) => handleChange("description", e.target.value)}
+            style={{
+              width: "100%",
+              padding: "0.4rem 0.5rem",
+              borderRadius: "0.5rem",
+              border: "1px solid #d1d5db",
+              fontSize: "0.9rem",
+            }}
+          />
         </div>
 
         <div
           style={{
             marginTop: "1rem",
-            paddingTop: "0.75rem",
-            borderTop: "1px dashed #e5e7eb",
-            fontSize: "0.8rem",
-            color: "#6b7280",
             display: "flex",
             justifyContent: "space-between",
-            gap: "1rem",
+            gap: "0.75rem",
           }}
         >
-          <div>
-            {created_at && (
-              <div>Created: {new Date(created_at).toLocaleString()}</div>
-            )}
-            {updated_at && (
-              <div>Updated: {new Date(updated_at).toLocaleString()}</div>
-            )}
-          </div>
-          <div style={{ textAlign: "right" }}>
-            {/* Stubs for future features */}
-            <button
-              type="button"
-              style={{
-                padding: "0.25rem 0.6rem",
-                borderRadius: "0.5rem",
-                border: "1px solid #d1d5db",
-                background: "#f9fafb",
-                fontSize: "0.75rem",
-                cursor: "pointer",
-                marginLeft: "0.25rem",
-              }}
-            >
-              Duplicate
-            </button>
-            <button
-              type="button"
-              style={{
-                padding: "0.25rem 0.6rem",
-                borderRadius: "0.5rem",
-                border: "none",
-                background: "#2563eb",
-                color: "#ffffff",
-                fontSize: "0.75rem",
-                cursor: "pointer",
-                marginLeft: "0.25rem",
-              }}
-            >
-              Edit workflow
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/workflows")}
+            disabled={saving}
+            style={{
+              padding: "0.35rem 0.8rem",
+              borderRadius: "0.5rem",
+              border: "1px solid #d1d5db",
+              background: "#ffffff",
+              fontSize: "0.8rem",
+              cursor: "pointer",
+            }}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              padding: "0.35rem 0.8rem",
+              borderRadius: "0.5rem",
+              border: "none",
+              background: "#2563eb",
+              color: "#ffffff",
+              fontSize: "0.8rem",
+              cursor: "pointer",
+            }}
+          >
+            {saving ? "Saving…" : "Save"}
+          </button>
         </div>
       </div>
     </div>

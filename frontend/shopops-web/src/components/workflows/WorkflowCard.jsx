@@ -1,9 +1,6 @@
-import { useNavigate } from "react-router-dom";
-
+// src/components/workflows/WorkflowCard.jsx
 function WorkflowCard({ workflow }) {
-  const navigate = useNavigate();
   const {
-    id,
     name,
     description,
     is_default,
@@ -19,10 +16,6 @@ function WorkflowCard({ workflow }) {
     ? new Date(updated_at).toLocaleDateString()
     : null;
 
-  const handleView = () => {
-    navigate(`/workflows/${id}`);
-  };
-
   return (
     <div
       style={{
@@ -36,6 +29,7 @@ function WorkflowCard({ workflow }) {
         gap: "0.5rem",
       }}
     >
+      {/* Header row: name + badges */}
       <div
         style={{
           display: "flex",
@@ -105,6 +99,7 @@ function WorkflowCard({ workflow }) {
         </div>
       </div>
 
+      {/* Footer meta */}
       <div
         style={{
           display: "flex",
@@ -123,7 +118,6 @@ function WorkflowCard({ workflow }) {
         <div style={{ display: "flex", gap: "0.4rem" }}>
           <button
             type="button"
-            onClick={handleView}
             style={{
               padding: "0.25rem 0.6rem",
               borderRadius: "0.5rem",
@@ -132,13 +126,12 @@ function WorkflowCard({ workflow }) {
               fontSize: "0.75rem",
               cursor: "pointer",
             }}
+            // TODO: wire to a detail/edit view
           >
             View
           </button>
-          {/* Edit will probably also navigate here later */}
           <button
             type="button"
-            onClick={handleView}
             style={{
               padding: "0.25rem 0.6rem",
               borderRadius: "0.5rem",
@@ -148,6 +141,7 @@ function WorkflowCard({ workflow }) {
               fontSize: "0.75rem",
               cursor: "pointer",
             }}
+            // TODO: wire to assign-to-shop or edit stages
           >
             Edit
           </button>
