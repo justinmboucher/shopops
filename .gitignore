@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+*.sqlite3
+
+# Django
+/media/
+staticfiles/
+*.log
+
+# Node
+node_modules/
+npm-debug.log
+dist/
+build/
+
+# React Native
+android/
+ios/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
