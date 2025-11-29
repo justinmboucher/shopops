@@ -1,8 +1,18 @@
 // src/components/settings/ShopSettingsPanel.jsx
-// src/components/settings/ShopSettingsPanel.jsx
+
 function ShopSettingsPanel({ shop, onEdit }) {
   if (!shop) {
-    return <p>No shop found for your account.</p>;
+    return (
+      <section>
+        <h3>Shop configuration</h3>
+        <p>No shop found for your account.</p>
+        {onEdit && (
+          <button type="button" onClick={onEdit}>
+            Create shop
+          </button>
+        )}
+      </section>
+    );
   }
 
   const {
@@ -18,99 +28,89 @@ function ShopSettingsPanel({ shop, onEdit }) {
   } = shop;
 
   return (
-    <div
-      style={{
-        borderRadius: "0.75rem",
-        border: "1px solid #e5e7eb",
-        padding: "1rem",
-        background: "#ffffff",
-        boxShadow: "0 1px 2px rgba(15, 23, 42, 0.08)",
-        maxWidth: "640px",
-      }}
-    >
-      <h3 style={{ marginTop: 0 }}>Shop configuration</h3>
+    <section className="settings-card">
+      <header className="settings-card__header">
+        <h3>Shop configuration</h3>
+        <p>Update your shop name, region, and default pricing preferences.</p>
+      </header>
 
-      <div
-        style={{
-          marginTop: "0.5rem",
-          fontSize: "0.9rem",
-          color: "#4b5563",
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.25rem",
-        }}
-      >
-        <div>
-          <strong>Name:</strong> {name}
+      <dl className="settings-list">
+        <div className="settings-list__item">
+          <dt>Shop name</dt>
+          <dd>{name || <span className="muted">Not set</span>}</dd>
         </div>
-        {description && (
-          <div>
-            <strong>Description:</strong> {description}
-          </div>
-        )}
-        {timezone && (
-          <div>
-            <strong>Timezone:</strong> {timezone}
-          </div>
-        )}
-        {currency && (
-          <div>
-            <strong>Currency:</strong> {currency}
-          </div>
-        )}
-        {default_hourly_rate != null && (
-          <div>
-            <strong>Default hourly rate:</strong> {default_hourly_rate}
-          </div>
-        )}
-        {default_markup_pct != null && (
-          <div>
-            <strong>Default markup:</strong> {default_markup_pct}%
-          </div>
-        )}
-        {theme && (
-          <div>
-            <strong>Theme:</strong> {theme}
-          </div>
-        )}
-      </div>
 
-      <div
-        style={{
-          marginTop: "1rem",
-          paddingTop: "0.75rem",
-          borderTop: "1px dashed #e5e7eb",
-          fontSize: "0.8rem",
-          color: "#6b7280",
-          display: "flex",
-          justifyContent: "space-between",
-          gap: "1rem",
-        }}
-      >
-        <div>
-          {created_at && (
-            <div>Created: {new Date(created_at).toLocaleString()}</div>
-          )}
-          {updated_at && (
-            <div>Updated: {new Date(updated_at).toLocaleString()}</div>
-          )}
+        <div className="settings-list__item">
+          <dt>Description</dt>
+          <dd>
+            {description ? (
+              description
+            ) : (
+              <span className="muted">No description</span>
+            )}
+          </dd>
         </div>
-        <button
-          type="button"
-          style={{
-            padding: "0.25rem 0.6rem",
-            borderRadius: "0.5rem",
-            border: "1px solid #d1d5db",
-            background: "#f9fafb",
-            fontSize: "0.75rem",
-            cursor: "pointer",
-          }}
-          onClick={() => onEdit && onEdit()}
-        >
-          Edit shop
-        </button>
-      </div>
-    </div>
+
+        <div className="settings-list__item">
+          <dt>Timezone</dt>
+          <dd>{timezone || <span className="muted">Not set</span>}</dd>
+        </div>
+
+        <div className="settings-list__item">
+          <dt>Currency</dt>
+          <dd>{currency || <span className="muted">USD (default)</span>}</dd>
+        </div>
+
+        <div className="settings-list__item">
+          <dt>Default hourly rate</dt>
+          <dd>
+            {default_hourly_rate != null && Number(default_hourly_rate) > 0 ? (
+              <>${Number(default_hourly_rate).toFixed(2)} / hour</>
+            ) : (
+              <span className="muted">Not set</span>
+            )}
+          </dd>
+        </div>
+
+        <div className="settings-list__item">
+          <dt>Default markup</dt>
+          <dd>
+            {default_markup_pct != null && Number(default_markup_pct) > 0 ? (
+              <>{Number(default_markup_pct).toFixed(1)}%</>
+            ) : (
+              <span className="muted">Not set</span>
+            )}
+          </dd>
+        </div>
+
+        <div className="settings-list__item">
+          <dt>Theme</dt>
+          <dd>{theme || <span className="muted">System</span>}</dd>
+        </div>
+
+        {created_at && (
+          <div className="settings-list__item">
+            <dt>Created</dt>
+            <dd>{new Date(created_at).toLocaleString()}</dd>
+          </div>
+        )}
+
+        {updated_at && (
+          <div className="settings-list__item">
+            <dt>Last updated</dt>
+            <dd>{new Date(updated_at).toLocaleString()}</dd>
+          </div>
+        )}
+      </dl>
+
+      {onEdit && (
+        <div className="settings-card__footer">
+          <button type="button" onClick={onEdit}>
+            Edit shop
+          </button>
+        </div>
+      )}
+    </section>
   );
 }
 

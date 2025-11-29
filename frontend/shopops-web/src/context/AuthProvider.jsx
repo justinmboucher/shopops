@@ -55,39 +55,44 @@ function AuthProvider({ children }) {
   }, [setTokens]);
 
   const login = useCallback(
-    async (username, password) => {
-      clearError();
-      setLoading(true);
-      try {
-        const resp = await api.post("/auth/token/", { username, password });
-        const { access, refresh } = resp.data;
+  async (username, password) => {
+    clearError();
+    setLoading(true);
+    try {
+      const resp = await api.post("/auth/token/", { username, password });
+      const { access, refresh } = resp.data;
 
-        setTokens(access, refresh);
+      // store tokens
+      setTokens(access, refresh);
 
-        // fetch current user
-        const meResp = await api.get("/auth/me/");
-        setUser(meResp.data);
-      } catch (error) {
-        let msg = "Unable to sign in. Please check your username and password.";
+      // explicitly send Authorization header for this first /me call
+      const meResp = await api.get("/auth/me/", {
+        headers: {
+          Authorization: `Bearer ${access}`,
+        },
+      });
 
-        if (error.response?.data) {
-          const data = error.response.data;
-          if (typeof data.detail === "string") {
-            msg = data.detail;
-          } else if (Array.isArray(data.non_field_errors)) {
-            msg = data.non_field_errors.join(" ");
-          }
+      setUser(meResp.data);
+    } catch (error) {
+      let msg = "Unable to sign in. Please check your username and password.";
+
+      if (error.response?.data) {
+        const data = error.response.data;
+        if (typeof data.detail === "string") {
+          msg = data.detail;
+        } else if (Array.isArray(data.non_field_errors)) {
+          msg = data.non_field_errors.join(" ");
         }
-
-        setAuthError(msg);
-        // rethrow so Login.jsx's try/catch still works as written
-        throw error;
-      } finally {
-        setLoading(false);
       }
-    },
-    [clearError, setTokens]
-  );
+
+      setAuthError(msg);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  },
+  [clearError, setTokens]
+);
 
   // Wire this auth store into the axios client so it can refresh tokens
   useEffect(() => {

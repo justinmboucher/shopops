@@ -5,18 +5,16 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+from core.views import MeView, ShopView
+
 urlpatterns = [
     path("admin/", admin.site.urls),
 
-    # 🔐 Auth endpoints expected by your frontend
     path("api/auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path(
-        "api/auth/token/refresh/",
-        TokenRefreshView.as_view(),
-        name="token_refresh",
-    ),
+    path("api/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("api/auth/me/", MeView.as_view(), name="auth-me"),
+    path("api/shop/", ShopView.as_view(), name="shop-detail"),
 
-    # Your existing app URLs
     path("api/core/", include("core.urls")),
     path("api/workflows/", include("workflows.urls")),
     path("api/inventory/", include("inventory.urls")),

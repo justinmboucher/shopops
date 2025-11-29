@@ -3,14 +3,24 @@ from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 from .models import Shop
-from .serializers import ShopSerializer
+from .serializers import ShopSerializer, CurrentUserSerializer
 
+class MeView(APIView):
+    """
+    Return the currently authenticated user.
 
-@api_view(["GET"])
-def ping(request):
-    return Response({"status": "ok", "message": "ShopOps backend is alive"})
+    GET /api/auth/me/
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = CurrentUserSerializer(request.user)
+        return Response(serializer.data)
 
 
 class ShopView(generics.RetrieveUpdateAPIView):
