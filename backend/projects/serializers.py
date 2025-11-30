@@ -60,17 +60,32 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         """
-        Basic validation: require either a template or a workflow,
-        but template is the primary path for MVP.
+        Validation that works for both create and partial update.
+
+        - On create: template is required
+        - On update: if template not provided, reuse existing instance.template
+        - Quantity must be >= 1 (using new value if provided, else existing)
         """
+        # Figure out template (new value or existing one)
         template = attrs.get("template")
+        if not template and self.instance is not None:
+            # partial update, fall back to existing template
+            template = getattr(self.instance, "template", None)
+
         if not template:
             raise serializers.ValidationError(
                 {"template": "A product template is required to create a project."}
             )
 
-        quantity = attrs.get("quantity", 1)
-        if quantity <= 0:
+        # Quantity: prefer incoming value, else existing, else 1
+        if "quantity" in attrs:
+            quantity = attrs["quantity"]
+        elif self.instance is not None:
+            quantity = getattr(self.instance, "quantity", 1)
+        else:
+            quantity = 1
+
+        if quantity is None or quantity <= 0:
             raise serializers.ValidationError(
                 {"quantity": "Quantity must be at least 1."}
             )

@@ -8,6 +8,7 @@ import WorkflowDetail from "../pages/WorkflowDetail";
 import Login from "../pages/Login";
 import NotFound from "../pages/NotFound";
 import RequireAuth from "./RequireAuth";
+import ProjectDetail from "../pages/ProjectDetail";
 
 function AppRouter() {
   return (
@@ -38,6 +39,14 @@ function AppRouter() {
           </RequireAuth>
         }
       />
+      <Route
+    path="/projects/:id"
+    element={
+      <RequireAuth>
+        <ProjectDetail />
+      </RequireAuth>
+    }
+  />
       <Route
         path="/workflows"
         element={

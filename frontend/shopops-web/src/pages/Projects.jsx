@@ -1,10 +1,12 @@
 // src/pages/Projects.jsx
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   fetchProjects,
   createProject,
   cancelProject,
   logProjectSale,
+  moveProjectStage,
 } from "../api/projects";
 import { fetchProductTemplates } from "../api/products";
 
@@ -17,6 +19,19 @@ function formatDate(dateString) {
 function formatMoney(amount) {
   if (amount == null || isNaN(Number(amount))) return "—";
   return `$${Number(amount).toFixed(2)}`;
+}
+
+// Rush logic: due within 3 days (including overdue)
+function isRush(project) {
+  if (!project?.due_date) return false;
+  const due = new Date(project.due_date);
+  if (Number.isNaN(due.getTime())) return false;
+
+  const now = new Date();
+  const msDiff = due.getTime() - now.getTime();
+  const daysDiff = msDiff / (1000 * 60 * 60 * 24);
+
+  return daysDiff <= 3;
 }
 
 /** New Project Modal */
@@ -1167,6 +1182,230 @@ function LogSaleModal({ project, onClose, onUpdated }) {
   );
 }
 
+/** Move Stage Modal */
+function MoveStageModal({ project, onClose, onUpdated }) {
+  const [stageId, setStageId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  useEffect(() => {
+    if (!project) {
+      setStageId("");
+      setError(null);
+      setFieldErrors({});
+      return;
+    }
+
+    // Pre-fill with current stage id, if available
+    if (project.current_stage) {
+      setStageId(project.current_stage);
+    } else if (project.current_stage_id) {
+      setStageId(project.current_stage_id);
+    } else {
+      setStageId("");
+    }
+  }, [project]);
+
+  if (!project) return null;
+
+  const errorText = (field) =>
+    Array.isArray(fieldErrors[field]) ? fieldErrors[field].join(" ") : null;
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setFieldErrors({});
+
+    try {
+      const numericStageId = Number(stageId);
+      if (!numericStageId || Number.isNaN(numericStageId)) {
+        setError("Stage ID must be a valid number.");
+        setLoading(false);
+        return;
+      }
+
+      const updated = await moveProjectStage(project.id, numericStageId);
+      onUpdated?.(updated);
+      onClose();
+    } catch (err) {
+      console.error("moveProjectStage error:", err);
+      const data = err.response?.data;
+      if (data && typeof data === "object") {
+        setFieldErrors(data);
+        setError(
+          data.detail ||
+            "Failed to move project. Make sure the stage belongs to this workflow."
+        );
+      } else {
+        setError("Failed to move project.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(15, 23, 42, 0.45)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 50,
+      }}
+      onClick={onClose}
+    >
+      <div
+        className="settings-card"
+        style={{
+          maxWidth: "420px",
+          width: "100%",
+          maxHeight: "90vh",
+          overflowY: "auto",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ width: "100%" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "0.75rem",
+            }}
+          >
+            <h2 style={{ margin: 0, fontSize: "1.05rem" }}>
+              Move stage: {project.name || `#${project.id}`}
+            </h2>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                border: "none",
+                background: "transparent",
+                fontSize: "1.2rem",
+                cursor: "pointer",
+              }}
+              disabled={loading}
+            >
+              ×
+            </button>
+          </div>
+
+          <p
+            style={{
+              marginTop: 0,
+              marginBottom: "0.75rem",
+              fontSize: "0.85rem",
+              color: "#6b7280",
+            }}
+          >
+            Enter the ID of the workflow stage you want this project to move to.
+            (You can look up stage IDs in the Workflow admin or API for now.)
+          </p>
+
+          {error && (
+            <div
+              style={{
+                marginBottom: "0.75rem",
+                fontSize: "0.85rem",
+                color: "#b91c1c",
+              }}
+            >
+              {error}
+            </div>
+          )}
+
+          <form
+            onSubmit={handleSubmit}
+            style={{ display: "grid", gap: "0.75rem" }}
+          >
+            <div>
+              <label
+                style={{
+                  fontSize: "0.8rem",
+                  display: "block",
+                  marginBottom: 4,
+                }}
+              >
+                Stage ID
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={stageId}
+                onChange={(e) => setStageId(e.target.value)}
+                style={{
+                  width: "100%",
+                  borderRadius: "6px",
+                  border: "1px solid #d1d5db",
+                  padding: "0.4rem 0.6rem",
+                  fontSize: "0.9rem",
+                }}
+              />
+              {errorText("stage_id") && (
+                <p
+                  style={{
+                    margin: "0.15rem 0 0",
+                    fontSize: "0.75rem",
+                    color: "#b91c1c",
+                  }}
+                >
+                  {errorText("stage_id")}
+                </p>
+              )}
+            </div>
+
+            <div style={{ fontSize: "0.8rem", color: "#6b7280" }}>
+              <div>
+                Current stage:{" "}
+                <strong>{project.current_stage_name || "—"}</strong>
+              </div>
+              {project.workflow_name && (
+                <div>
+                  Workflow: <strong>{project.workflow_name}</strong>
+                </div>
+              )}
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "0.5rem",
+                marginTop: "0.5rem",
+              }}
+            >
+              <button
+                type="button"
+                onClick={onClose}
+                style={{
+                  borderRadius: "8px",
+                  border: "1px solid #d1d5db",
+                  padding: "0.45rem 0.9rem",
+                  fontSize: "0.9rem",
+                  background: "#ffffff",
+                  cursor: "pointer",
+                }}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button type="submit" className="btn" disabled={loading}>
+                {loading ? "Moving…" : "Move stage"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** Projects list page */
 export default function Projects() {
   const [projects, setProjects] = useState([]);
@@ -1178,6 +1417,7 @@ export default function Projects() {
   const [showNewModal, setShowNewModal] = useState(false);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [saleTarget, setSaleTarget] = useState(null);
+  const [moveTarget, setMoveTarget] = useState(null);
 
   // Load projects
   useEffect(() => {
@@ -1212,18 +1452,27 @@ export default function Projects() {
     };
   }, []);
 
-  // Filtering logic
+  // Filtering logic (⭐ includes Rush in search)
   useEffect(() => {
     let list = [...projects];
 
     if (search.trim()) {
       const term = search.toLowerCase();
-      list = list.filter(
-        (p) =>
-          p.name?.toLowerCase().includes(term) ||
-          p.customer_name?.toLowerCase().includes(term) ||
-          p.template_name?.toLowerCase().includes(term)
-      );
+
+      list = list.filter((p) => {
+        const rushFlag = isRush(p); // ⭐ RUSH: include rush marker in search
+        const haystack = [
+          p.name,
+          p.customer_name,
+          p.template_name,
+          rushFlag ? "rush urgent" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+
+        return haystack.includes(term);
+      });
     }
 
     if (statusFilter !== "all") {
@@ -1275,7 +1524,7 @@ export default function Projects() {
       >
         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
           <input
-            placeholder="Search by name, customer, or template…"
+            placeholder="Search by name, customer, template, or 'rush'…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{
@@ -1370,118 +1619,164 @@ export default function Projects() {
               </tr>
             )}
 
-            {list.map((p) => (
-              <tr
-                key={p.id}
-                style={{
-                  borderBottom: "1px solid #e5e7eb",
-                }}
-              >
-                <td style={{ padding: "0.6rem 0.75rem" }}>
-                  {p.name || `Project #${p.id}`}
-                </td>
-                <td style={{ padding: "0.6rem 0.75rem" }}>
-                  {p.template_name || "—"}
-                </td>
-                <td style={{ padding: "0.6rem 0.75rem" }}>
-                  {p.customer_name || "—"}
-                </td>
-                <td style={{ padding: "0.6rem 0.75rem" }}>
-                  {p.workflow_name || "—"}
-                </td>
-                <td style={{ padding: "0.6rem 0.75rem" }}>
-                  {p.current_stage_name || "—"}
-                </td>
-                <td style={{ padding: "0.6rem 0.75rem" }}>
-                  {formatDate(p.due_date)}
-                </td>
-                <td
+            {list.map((p) => {
+              const rush = isRush(p); // ⭐ RUSH tag per-row
+              return (
+                <tr
+                  key={p.id}
                   style={{
-                    padding: "0.6rem 0.75rem",
-                    textAlign: "right",
-                    whiteSpace: "nowrap",
+                    borderBottom: "1px solid #e5e7eb",
                   }}
                 >
-                  {formatMoney(p.expected_price)}
-                </td>
-                <td style={{ padding: "0.6rem 0.75rem" }}>
-                  <span
+                  <td style={{ padding: "0.6rem 0.75rem" }}>
+                    {/* Project name + Rush pill */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.35rem",
+                      }}
+                    >
+                      <Link to={`/projects/${p.id}`}>
+                        {p.name || `Project #${p.id}`}
+                      </Link>
+                      {rush && (
+                        <span
+                          style={{
+                            padding: "0.1rem 0.5rem",
+                            borderRadius: "999px",
+                            fontSize: "0.7rem",
+                            fontWeight: 700,
+                            background: "#fee2e2",
+                            color: "#b91c1c",
+                            border: "1px solid #fecaca",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.05em",
+                          }}
+                        >
+                          Rush
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td style={{ padding: "0.6rem 0.75rem" }}>
+                    {p.template_name || "—"}
+                  </td>
+                  <td style={{ padding: "0.6rem 0.75rem" }}>
+                    {p.customer_name || "—"}
+                  </td>
+                  <td style={{ padding: "0.6rem 0.75rem" }}>
+                    {p.workflow_name || "—"}
+                  </td>
+                  <td style={{ padding: "0.6rem 0.75rem" }}>
+                    {p.current_stage_name || "—"}
+                  </td>
+                  <td style={{ padding: "0.6rem 0.75rem" }}>
+                    {formatDate(p.due_date)}
+                  </td>
+                  <td
                     style={{
-                      padding: "0.25rem 0.6rem",
-                      borderRadius: "999px",
-                      fontSize: "0.75rem",
-                      background:
-                        {
-                          completed: "#d1fae5",
-                          active: "#dbeafe",
-                          queued: "#e5e7eb",
-                          cancelled: "#fee2e2",
-                        }[p.status] || "#e5e7eb",
-                      color:
-                        {
-                          completed: "#065f46",
-                          active: "#1e40af",
-                          queued: "#374151",
-                          cancelled: "#991b1b",
-                        }[p.status] || "#374151",
+                      padding: "0.6rem 0.75rem",
+                      textAlign: "right",
+                      whiteSpace: "nowrap",
                     }}
                   >
-                    {p.status || "—"}
-                  </span>
-                </td>
-                <td
-                  style={{
-                    padding: "0.6rem 0.75rem",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {p.status === "active" && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => setSaleTarget(p)}
-                        style={{
-                          borderRadius: "999px",
-                          border: "1px solid #d1d5db",
-                          padding: "0.15rem 0.6rem",
-                          fontSize: "0.75rem",
-                          background: "#ffffff",
-                          cursor: "pointer",
-                          marginRight: "0.25rem",
-                        }}
-                      >
-                        Log sale
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setCancelTarget(p)}
-                        style={{
-                          borderRadius: "999px",
-                          border: "1px solid #fecaca",
-                          padding: "0.15rem 0.6rem",
-                          fontSize: "0.75rem",
-                          background: "#fef2f2",
-                          cursor: "pointer",
-                          color: "#b91c1c",
-                        }}
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  )}
-                  {p.status === "completed" && (
-                    <span style={{ fontSize: "0.75rem", color: "#6b7280" }}>
-                      Completed
+                    {formatMoney(p.expected_price)}
+                  </td>
+                  <td style={{ padding: "0.6rem 0.75rem" }}>
+                    <span
+                      style={{
+                        padding: "0.25rem 0.6rem",
+                        borderRadius: "999px",
+                        fontSize: "0.75rem",
+                        background:
+                          {
+                            completed: "#d1fae5",
+                            active: "#dbeafe",
+                            queued: "#e5e7eb",
+                            cancelled: "#fee2e2",
+                          }[p.status] || "#e5e7eb",
+                        color:
+                          {
+                            completed: "#065f46",
+                            active: "#1e40af",
+                            queued: "#374151",
+                            cancelled: "#991b1b",
+                          }[p.status] || "#374151",
+                      }}
+                    >
+                      {p.status || "—"}
                     </span>
-                  )}
-                  {p.status === "cancelled" && (
-                    <span style={{ fontSize: "0.75rem", color: "#6b7280" }}>
-                      Cancelled
-                    </span>
-                  )}
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td
+                    style={{
+                      padding: "0.6rem 0.75rem",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {p.status === "active" && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setSaleTarget(p)}
+                          style={{
+                            borderRadius: "999px",
+                            border: "1px solid #d1d5db",
+                            padding: "0.15rem 0.6rem",
+                            fontSize: "0.75rem",
+                            background: "#ffffff",
+                            cursor: "pointer",
+                            marginRight: "0.25rem",
+                          }}
+                        >
+                          Log sale
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setMoveTarget(p)}
+                          style={{
+                            borderRadius: "999px",
+                            border: "1px solid #bfdbfe",
+                            padding: "0.15rem 0.6rem",
+                            fontSize: "0.75rem",
+                            background: "#eff6ff",
+                            cursor: "pointer",
+                            marginRight: "0.25rem",
+                          }}
+                        >
+                          Move
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCancelTarget(p)}
+                          style={{
+                            borderRadius: "999px",
+                            border: "1px solid #fecaca",
+                            padding: "0.15rem 0.6rem",
+                            fontSize: "0.75rem",
+                            background: "#fef2f2",
+                            cursor: "pointer",
+                            color: "#b91c1c",
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    )}
+                    {p.status === "completed" && (
+                      <span style={{ fontSize: "0.75rem", color: "#6b7280" }}>
+                        Completed
+                      </span>
+                    )}
+                    {p.status === "cancelled" && (
+                      <span style={{ fontSize: "0.75rem", color: "#6b7280" }}>
+                        Cancelled
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -1507,6 +1802,16 @@ export default function Projects() {
       <LogSaleModal
         project={saleTarget}
         onClose={() => setSaleTarget(null)}
+        onUpdated={(updated) => {
+          setProjects((prev) =>
+            prev.map((p) => (p.id === updated.id ? updated : p))
+          );
+        }}
+      />
+
+      <MoveStageModal
+        project={moveTarget}
+        onClose={() => setMoveTarget(null)}
         onUpdated={(updated) => {
           setProjects((prev) =>
             prev.map((p) => (p.id === updated.id ? updated : p))
