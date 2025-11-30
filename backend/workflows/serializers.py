@@ -10,6 +10,8 @@ class WorkflowStageSerializer(serializers.ModelSerializer):
 
 
 class WorkflowDefinitionSerializer(serializers.ModelSerializer):
+    stages = WorkflowStageSerializer(many=True, read_only=True)
+
     class Meta:
         model = WorkflowDefinition
         fields = [
@@ -20,6 +22,7 @@ class WorkflowDefinitionSerializer(serializers.ModelSerializer):
             "is_active",
             "created_at",
             "updated_at",
+            "stages",
         ]
 
 

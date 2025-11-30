@@ -1,92 +1,79 @@
-from rest_framework import viewsets
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from .models import WorkflowDefinition
+# backend/workflows/views.py
+from rest_framework import generics, permissions
+from rest_framework.exceptions import NotFound, PermissionDenied
 
-from core.models import Shop
-from workflows.models import WorkflowDefinition
-from workflows.serializers import (
-    WorkflowDefinitionSerializer,
-    BoardStageSerializer,
-)
-from projects.models import Project
+from .models import WorkflowDefinition, WorkflowStage
+from .serializers import WorkflowDefinitionSerializer, WorkflowStageSerializer
+from .utils import get_current_shop
 
 
-class WorkflowDefinitionViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Read-only viewset for workflows.
-
-    - GET /api/workflows/          -> list workflows for the current user's shop
-    - GET /api/workflows/{id}/     -> workflow detail
-    - GET /api/workflows/{id}/board/ -> board data (stages + projects)
-    """
-    queryset = WorkflowDefinition.objects.all()
-    permission_classes = [IsAuthenticated]
+# -----------------------------
+# Workflows: list + create
+# -----------------------------
+class WorkflowListCreateView(generics.ListCreateAPIView):
     serializer_class = WorkflowDefinitionSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-    # def get_queryset(self):
-    #     user = self.request.user
+    def get_queryset(self):
+        shop = get_current_shop(self.request)
+        return WorkflowDefinition.objects.filter(shop=shop, is_active=True)
 
-    #     # If user isn't authenticated, DRF will block earlier via permissions,
-    #     # but we'll be defensive anyway.
-    #     if not user.is_authenticated:
-    #         return WorkflowDefinition.objects.none()
+    def perform_create(self, serializer):
+        shop = get_current_shop(self.request)
+        serializer.save(shop=shop)
 
-    #     # Try to get the user's shop; if missing, return empty queryset
-    #     try:
-    #         shop = user.shop
-    #     except Shop.DoesNotExist:
-    #         # For now: no shop -> no workflows
-    #         return WorkflowDefinition.objects.none()
 
-    #     return WorkflowDefinition.objects.filter(shop=shop, is_active=True).order_by(
-    #         "name"
-    #     )
+# -----------------------------
+# Single workflow: retrieve / update / delete
+# -----------------------------
+class WorkflowDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = WorkflowDefinitionSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-    @action(detail=True, methods=["get"])
-    def board(self, request, pk=None):
-        """
-        Return board data for this workflow:
-        - stages in order
-        - active projects assigned to this workflow grouped by stage
-        """
-        workflow = self.get_object()
+    def get_queryset(self):
+        shop = get_current_shop(self.request)
+        return WorkflowDefinition.objects.filter(shop=shop)
 
-        stages = list(workflow.stages.all())
-        projects = (
-            Project.objects.filter(
-                workflow=workflow,
-                status="active",
-            )
-            .select_related("current_stage", "template", "customer")
-            .order_by("due_date", "id")
-        )
+    
+# -----------------------------
+# Workflow stages: list + create
+# -----------------------------
+class WorkflowStageListCreateView(generics.ListCreateAPIView):
+    serializer_class = WorkflowStageSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-        # Group projects by stage id
-        projects_by_stage = {stage.id: [] for stage in stages}
-        for project in projects:
-            stage_id = project.current_stage_id
-            if stage_id in projects_by_stage:
-                projects_by_stage[stage_id].append(project)
+    def _get_workflow(self):
+        shop = get_current_shop(self.request)
+        workflow_id = self.kwargs["workflow_id"]
+        workflow = WorkflowDefinition.objects.filter(id=workflow_id, shop=shop).first()
+        if not workflow:
+            raise NotFound("Workflow not found.")
+        return workflow
 
-        # Build list of stage dicts with projects
-        board_stages = []
-        for stage in stages:
-            board_stages.append(
-                {
-                    "id": stage.id,
-                    "name": stage.name,
-                    "order": stage.order,
-                    "role": stage.role,
-                    "projects": projects_by_stage.get(stage.id, []),
-                }
-            )
+    def get_queryset(self):
+        workflow = self._get_workflow()
+        return workflow.stages.all()
 
-        serializer = BoardStageSerializer(board_stages, many=True)
-        return Response(
-            {
-                "workflow": WorkflowDefinitionSerializer(workflow).data,
-                "stages": serializer.data,
-            }
-        )
+    def perform_create(self, serializer):
+        workflow = self._get_workflow()
+        serializer.save(workflow=workflow)
+
+
+# -----------------------------
+# Single stage: retrieve / update / delete
+# -----------------------------
+class WorkflowStageDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = WorkflowStageSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _get_workflow(self):
+        shop = get_current_shop(self.request)
+        workflow_id = self.kwargs["workflow_id"]
+        workflow = WorkflowDefinition.objects.filter(id=workflow_id, shop=shop).first()
+        if not workflow:
+            raise NotFound("Workflow not found.")
+        return workflow
+
+    def get_queryset(self):
+        workflow = self._get_workflow()
+        return workflow.stages.all()

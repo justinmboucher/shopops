@@ -1,13 +1,20 @@
 // src/pages/Workflows.jsx
 import { useEffect, useState } from "react";
-import { fetchWorkflows } from "../api/workflows";
-import WorkflowCard from "../components/workflows/WorkflowCard";
+import { useNavigate } from "react-router-dom";
+import api from "../api/client";
 
 function Workflows() {
+  const navigate = useNavigate();
+
   const [workflows, setWorkflows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [isCreating, setIsCreating] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+
+  // Load workflows on mount
   useEffect(() => {
     let ignore = false;
 
@@ -15,18 +22,24 @@ function Workflows() {
       try {
         setLoading(true);
         setError(null);
-        const data = await fetchWorkflows();
-        if (!ignore) {
-          setWorkflows(Array.isArray(data) ? data : []);
-        }
+        const resp = await api.get("/workflows/");
+
+// Supports both paginated and non-paginated DRF responses
+const list = Array.isArray(resp.data)
+  ? resp.data
+  : resp.data.results;
+
+setWorkflows(list || []);
+
       } catch (err) {
         if (!ignore) {
-          const message =
+          console.error("Failed to load workflows", err);
+          setError(
             err.response?.data?.detail ||
-            err.response?.data?.error ||
-            err.message ||
-            "Failed to load workflows";
-          setError(message);
+              err.response?.data?.error ||
+              err.message ||
+              "Failed to load workflows"
+          );
         }
       } finally {
         if (!ignore) setLoading(false);
@@ -34,28 +47,78 @@ function Workflows() {
     }
 
     loadWorkflows();
-
     return () => {
       ignore = true;
     };
   }, []);
 
-  if (loading) {
-    return <div>Loading workflows…</div>;
-  }
+  // “New workflow” button handler
+  const handleNewWorkflowClick = () => {
+    setIsCreating(true);
+    setNewName("");
+    setNewDescription("");
+  };
 
-  if (error) {
+  const handleCreateSubmit = async (e) => {
+    e.preventDefault();
+    if (!newName.trim()) return;
+
+    try {
+      setError(null);
+      const payload = {
+        name: newName.trim(),
+        description: newDescription.trim() || null,
+      };
+      const resp = await api.post("/workflows/", payload);
+      // append newly created workflow to list
+      setWorkflows((prev) => [...prev, resp.data]);
+      setIsCreating(false);
+    } catch (err) {
+      console.error("Failed to create workflow", err);
+      setError(
+        err.response?.data?.detail ||
+          err.response?.data?.error ||
+          err.message ||
+          "Failed to create workflow"
+      );
+    }
+  };
+
+  const handleCancelCreate = () => {
+    setIsCreating(false);
+  };
+
+  const handleOpenWorkflow = (wfId) => {
+    // matches your AppRouter route /workflows/:id
+    navigate(`/workflows/${wfId}`);
+  };
+
+  if (loading) {
     return (
-      <div>
-        <h2>Workflows</h2>
-        <p style={{ color: "crimson" }}>Error: {error}</p>
-      </div>
+      <main className="page">
+        <h1>Workflows</h1>
+        <p>Loading workflows…</p>
+      </main>
     );
   }
 
   return (
-    <div>
-      {/* Header row */}
+    <main className="page">
+      <header className="page-header">
+        <h1>Workflows</h1>
+        <p>
+          Different types of projects move differently. Create workflows that
+          match how your shop actually works.
+        </p>
+      </header>
+
+      {error && (
+        <div className="alert alert-error" style={{ marginBottom: "1rem" }}>
+          Error: {error}
+        </div>
+      )}
+
+      {/* Top bar: title + New workflow button */}
       <div
         style={{
           display: "flex",
@@ -64,46 +127,122 @@ function Workflows() {
           marginBottom: "1rem",
         }}
       >
-        <div>
-          <h2 style={{ margin: 0 }}>Workflows</h2>
-          <p style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", color: "#6b7280" }}>
-            Definitions for how work moves through your shop.
-          </p>
-        </div>
-
+        <h2 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>
+          Your workflows
+        </h2>
         <button
           type="button"
-          style={{
-            padding: "0.45rem 0.9rem",
-            borderRadius: "0.5rem",
-            border: "none",
-            background: "#2563eb",
-            color: "#ffffff",
-            fontSize: "0.85rem",
-            cursor: "pointer",
-          }}
-          // TODO: hook this to a create-modal or create-page
+          className="btn"
+          onClick={handleNewWorkflowClick}
         >
-          + New workflow
+          New workflow
         </button>
       </div>
 
-      {workflows.length === 0 ? (
-        <p>No workflows defined yet.</p>
-      ) : (
-        <div
+      {/* Inline create form shown when New workflow is clicked */}
+      {isCreating && (
+        <form
+          onSubmit={handleCreateSubmit}
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-            gap: "1rem",
+            border: "1px solid #d1d5db",
+            borderRadius: "0.75rem",
+            padding: "0.75rem 1rem",
+            marginBottom: "1rem",
+            background: "#ffffff",
           }}
         >
+          <div style={{ marginBottom: "0.5rem" }}>
+            <label
+              htmlFor="wf-name"
+              style={{ display: "block", fontSize: "0.85rem", marginBottom: 4 }}
+            >
+              Workflow name
+            </label>
+            <input
+              id="wf-name"
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Furniture builds, Cutting boards, etc."
+              required
+              style={{ width: "100%", padding: "0.4rem 0.5rem" }}
+            />
+          </div>
+
+          <div style={{ marginBottom: "0.5rem" }}>
+            <label
+              htmlFor="wf-description"
+              style={{ display: "block", fontSize: "0.85rem", marginBottom: 4 }}
+            >
+              Description (optional)
+            </label>
+            <textarea
+              id="wf-description"
+              value={newDescription}
+              onChange={(e) => setNewDescription(e.target.value)}
+              placeholder="What kinds of projects is this for?"
+              rows={2}
+              style={{ width: "100%", padding: "0.4rem 0.5rem" }}
+            />
+          </div>
+
+          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+            <button type="submit" className="btn">
+              Save workflow
+            </button>
+            <button
+              type="button"
+              className="btn"
+              style={{
+                backgroundColor: "#e5e7eb",
+                color: "#111827",
+              }}
+              onClick={handleCancelCreate}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* List of existing workflows */}
+      {workflows.length === 0 ? (
+        <p>No workflows yet. Create your first workflow to define your stages.</p>
+      ) : (
+        <div className="settings-grid">
           {workflows.map((wf) => (
-            <WorkflowCard key={wf.id} workflow={wf} />
+            <button
+              key={wf.id}
+              type="button"
+              className="settings-card settings-card--clickable"
+              onClick={() => handleOpenWorkflow(wf.id)}
+            >
+              <div className="settings-card__icon">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className="settings-card__icon-svg"
+                >
+                  <rect x="3" y="4" width="6" height="16" rx="1" />
+                  <rect x="10" y="4" width="6" height="10" rx="1" />
+                  <rect x="17" y="4" width="4" height="13" rx="1" />
+                </svg>
+              </div>
+              <div className="settings-card__body">
+                <h2>{wf.name}</h2>
+                <p>{wf.description || "No description"}</p>
+                <p className="settings-card__meta">
+                  {wf.is_default ? "Default workflow" : "Custom workflow"}
+                </p>
+              </div>
+              <div className="settings-card__cta">
+                <span className="settings-card__cta-text">Open</span>
+              </div>
+            </button>
           ))}
         </div>
       )}
-    </div>
+    </main>
   );
 }
 
