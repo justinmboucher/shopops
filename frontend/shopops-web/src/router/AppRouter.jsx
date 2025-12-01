@@ -12,6 +12,7 @@ import ProjectDetail from "../pages/ProjectDetail";
 import Customers from "../pages/Customers";
 import CustomerDetail from "../pages/CustomerDetail";
 import ProjectsBoard from "../pages/ProjectsBoard";
+import Inventory from "../pages/Inventory";
 
 function AppRouter() {
   return (
@@ -83,6 +84,8 @@ function AppRouter() {
           </RequireAuth>
         }
       />
+
+      <Route path="/inventory" element={<Inventory />} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>

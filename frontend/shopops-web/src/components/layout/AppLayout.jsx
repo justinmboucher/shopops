@@ -100,6 +100,12 @@ function AppLayout({ children }) {
             >
               Workflows
             </Link>
+            <Link
+              to="/inventory"
+              style={navLinkStyle(pathname.startsWith("/inventory"))}
+            >
+              Inventory
+            </Link>
           </nav>
         </div>
 
