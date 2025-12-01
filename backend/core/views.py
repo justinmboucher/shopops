@@ -1,4 +1,5 @@
 # core/views.py
+from django.utils import timezone
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound
@@ -57,9 +58,21 @@ class ShopView(generics.RetrieveUpdateAPIView):
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        shop = serializer.save(owner=user)
+        shop = serializer.save(
+            owner=user,
+            joined_at=timezone.now(),  # set first-joined timestamp
+        )
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # Re-serialize to include read-only fields
+        return Response(self.get_serializer(shop).data, status=status.HTTP_201_CREATED)
+
+    def perform_update(self, serializer):
+        """
+        On any update, bump last_active_at.
+        """
+        instance = serializer.save()
+        instance.last_active_at = timezone.now()
+        instance.save(update_fields=["last_active_at"])
 
 class CustomerViewSet(viewsets.ModelViewSet):
     """

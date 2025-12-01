@@ -8,19 +8,60 @@ class ShopSerializer(serializers.ModelSerializer):
         model = Shop
         fields = [
             "id",
+            "owner",
+
+            # Identity
             "name",
+            "tagline",
+            "description",
+
+            # Contact
+            "contact_email",
+            "contact_phone",
+
+            # Address
+            "address_line1",
+            "address_line2",
+            "city",
+            "state",
+            "postal_code",
+            "country",
+
+            # Online presence
+            "website_url",
+            "instagram_handle",
+            "facebook_handle",
+
+            # Preferences
             "timezone",
             "currency",
+            "default_units",
             "default_hourly_rate",
             "default_markup_pct",
+            "default_payment_terms",
+            "default_project_type",
+
+            # Appearance
             "theme",
             "logo_image",
-            "description",
+
+            # Shipping config
             "shipping_zones_config",
+
+            # Audit
+            "joined_at",
+            "last_active_at",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "owner",
+            "joined_at",
+            "last_active_at",
+            "created_at",
+            "updated_at",
+        ]
 
 User = get_user_model()
 

@@ -10,6 +10,8 @@ import {
 } from "../api/projects";
 import { fetchProductTemplates } from "../api/products";
 import { fetchCustomers } from "../api/customers";
+import Modal from "../components/common/Modal";
+
 
 function formatDate(dateString) {
   if (!dateString) return "—";
@@ -35,8 +37,7 @@ function isRush(project) {
   return daysDiff <= 3;
 }
 
-/** New Project Modal */
-/** New Project Modal */
+/** New Project Modal (industrial themed, using shared Modal) */
 function NewProjectModal({ open, onClose, onCreated }) {
   const [name, setName] = useState("");
   const [templateId, setTemplateId] = useState("");
@@ -151,44 +152,6 @@ function NewProjectModal({ open, onClose, onCreated }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [templateId, quantity, templates]);
 
-  if (!open) return null;
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setFieldErrors({});
-
-    try {
-      const qty = quantity ? Math.max(1, Number(quantity)) : 1;
-
-      const payload = {
-        template: templateId ? Number(templateId) : null,
-        quantity: qty,
-        name: name || null,
-        due_date: dueDate || null,
-        expected_price: expectedPrice ? parseFloat(expectedPrice) : null,
-        notes: notes || "",
-        customer: customerId ? Number(customerId) : null,
-      };
-
-      const created = await createProject(payload);
-      onCreated?.(created);
-      onClose();
-    } catch (err) {
-      console.error("createProject error:", err);
-      const data = err.response?.data;
-      if (data && typeof data === "object") {
-        setFieldErrors(data);
-        setError("Please fix the highlighted fields.");
-      } else {
-        setError("Failed to create project. Check required fields.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
   const errorText = (field) =>
     Array.isArray(fieldErrors[field]) ? fieldErrors[field].join(" ") : null;
 
@@ -228,598 +191,413 @@ function NewProjectModal({ open, onClose, onCreated }) {
     setCustomerDropdownOpen(false);
   }
 
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(15, 23, 42, 0.45)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 50,
-      }}
-      onClick={onClose}
-    >
-      <div
-        className="settings-card"
-        style={{
-          maxWidth: "520px",
-          width: "100%",
-          maxHeight: "90vh",
-          overflowY: "auto",
-        }}
-        onClick={(e) => e.stopPropagation()}
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setFieldErrors({});
+
+    try {
+      const qty = quantity ? Math.max(1, Number(quantity)) : 1;
+
+      const payload = {
+        template: templateId ? Number(templateId) : null,
+        quantity: qty,
+        name: name || null,
+        due_date: dueDate || null,
+        expected_price: expectedPrice ? parseFloat(expectedPrice) : null,
+        notes: notes || "",
+        customer: customerId ? Number(customerId) : null,
+      };
+
+      const created = await createProject(payload);
+      onCreated?.(created);
+      onClose();
+    } catch (err) {
+      console.error("createProject error:", err);
+      const data = err.response?.data;
+      if (data && typeof data === "object") {
+        setFieldErrors(data);
+        setError("Please fix the highlighted fields.");
+      } else {
+        setError("Failed to create project. Check required fields.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const templatesLoadingLabel =
+    loadingTemplates && templates.length === 0
+      ? "Loading templates…"
+      : "Select a template";
+
+  const modalFooter = (
+    <div className="modal-footer-actions">
+      <button
+        type="button"
+        className="btn btn-secondary"
+        onClick={onClose}
+        disabled={loading}
       >
-        <div style={{ width: "100%" }}>
-          {/* Header */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "0.75rem",
-            }}
-          >
-            <h2 style={{ margin: 0, fontSize: "1.05rem" }}>New Project</h2>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                border: "none",
-                background: "transparent",
-                fontSize: "1.2rem",
-                cursor: "pointer",
-              }}
-              disabled={loading}
-            >
-              ×
-            </button>
-          </div>
+        Cancel
+      </button>
+      <button
+        type="submit"
+        form="new-project-form"
+        className="btn"
+        disabled={loading}
+      >
+        {loading ? "Creating…" : "Create project"}
+      </button>
+    </div>
+  );
 
-          <p
-            style={{
-              marginTop: 0,
-              marginBottom: "0.75rem",
-              fontSize: "0.85rem",
-              color: "#6b7280",
-            }}
-          >
-            Choose a product template, then tweak quantity, name, customer, and
-            pricing. Workflow and stage will be inferred automatically.
-          </p>
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="New project"
+      footer={modalFooter}
+    >
+      <p className="page-subtitle" style={{ marginTop: 0, marginBottom: "0.75rem" }}>
+        Choose a product template, then tweak quantity, customer, and pricing.
+        Workflow and stage will be inferred automatically.
+      </p>
 
-          {error && (
-            <div
-              style={{
-                marginBottom: "0.75rem",
-                fontSize: "0.85rem",
-                color: "#b91c1c",
-              }}
-            >
-              {error}
-            </div>
+      {error && (
+        <p className="text-error" style={{ marginBottom: "0.75rem" }}>
+          {error}
+        </p>
+      )}
+
+      {templatesError && (
+        <p
+          style={{
+            marginBottom: "0.75rem",
+            fontSize: "0.8rem",
+            color: "#fbbf24",
+          }}
+        >
+          {templatesError} You can still enter a template ID manually.
+        </p>
+      )}
+
+      <form
+        id="new-project-form"
+        className="form-grid"
+        onSubmit={handleSubmit}
+      >
+        {/* Template select */}
+        <div className="form-field form-field--full">
+          <label className="form-label">Template *</label>
+          <select
+            value={templateId}
+            onChange={(e) => setTemplateId(e.target.value)}
+            required
+            disabled={loadingTemplates && templates.length === 0}
+            className="form-input"
+          >
+            <option value="">{templatesLoadingLabel}</option>
+            {templates.map((tpl) => (
+              <option key={tpl.id} value={tpl.id}>
+                {tpl.name}{" "}
+                {tpl.base_price != null
+                  ? `(${tpl.base_price} ${tpl.currency || ""})`
+                  : ""}
+              </option>
+            ))}
+          </select>
+          {errorText("template") && (
+            <p className="text-error" style={{ marginTop: "0.15rem" }}>
+              {errorText("template")}
+            </p>
           )}
 
           {templatesError && (
-            <div
-              style={{
-                marginBottom: "0.75rem",
-                fontSize: "0.8rem",
-                color: "#b45309",
-              }}
-            >
-              {templatesError} You can still enter a template ID manually.
-            </div>
-          )}
-
-          <form
-            onSubmit={handleSubmit}
-            style={{ display: "grid", gap: "0.75rem" }}
-          >
-            {/* Template select */}
-            <div>
-              <label
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 4,
-                }}
-              >
-                Template *
-              </label>
-              <select
-                value={templateId}
-                onChange={(e) => setTemplateId(e.target.value)}
-                required
-                disabled={loadingTemplates && templates.length === 0}
-                style={{
-                  width: "100%",
-                  borderRadius: "6px",
-                  border: "1px solid #d1d5db",
-                  padding: "0.4rem 0.6rem",
-                  fontSize: "0.9rem",
-                  background: "#ffffff",
-                }}
-              >
-                <option value="">
-                  {loadingTemplates && templates.length === 0
-                    ? "Loading templates…"
-                    : "Select a template"}
-                </option>
-                {templates.map((tpl) => (
-                  <option key={tpl.id} value={tpl.id}>
-                    {tpl.name}{" "}
-                    {tpl.base_price != null
-                      ? `(${tpl.base_price} ${tpl.currency || ""})`
-                      : ""}
-                  </option>
-                ))}
-              </select>
-              {errorText("template") && (
-                <p
-                  style={{
-                    margin: "0.15rem 0 0",
-                    fontSize: "0.75rem",
-                    color: "#b91c1c",
-                  }}
-                >
-                  {errorText("template")}
-                </p>
-              )}
-
-              {templatesError && (
-                <div style={{ marginTop: "0.4rem" }}>
-                  <label
-                    style={{
-                      fontSize: "0.75rem",
-                      display: "block",
-                      marginBottom: 2,
-                    }}
-                  >
-                    Or enter Template ID:
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={templateId}
-                    onChange={(e) => setTemplateId(e.target.value)}
-                    style={{
-                      width: "100%",
-                      borderRadius: "6px",
-                      border: "1px solid #d1d5db",
-                      padding: "0.3rem 0.5rem",
-                      fontSize: "0.85rem",
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Project name */}
-            <div>
-              <label
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 4,
-                }}
-              >
-                Project name
-              </label>
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={
-                  selectedTemplate?.name
-                    ? `Defaults to template name: ${selectedTemplate.name}`
-                    : "Optional display name"
-                }
-                style={{
-                  width: "100%",
-                  borderRadius: "6px",
-                  border: "1px solid #d1d5db",
-                  padding: "0.4rem 0.6rem",
-                  fontSize: "0.9rem",
-                }}
-              />
-              {errorText("name") && (
-                <p
-                  style={{
-                    margin: "0.15rem 0 0",
-                    fontSize: "0.75rem",
-                    color: "#b91c1c",
-                  }}
-                >
-                  {errorText("name")}
-                </p>
-              )}
-            </div>
-
-            {/* Customer combobox */}
-            <div>
-              <label
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 4,
-                }}
-              >
-                Customer
-              </label>
-
-              {customersError && (
-                <p
-                  style={{
-                    margin: "0 0 0.35rem",
-                    fontSize: "0.75rem",
-                    color: "#b45309",
-                  }}
-                >
-                  {customersError} You can still create a project without
-                  linking a customer.
-                </p>
-              )}
-
-              <div style={{ position: "relative" }}>
-                <input
-                  type="text"
-                  value={customerSearch}
-                  onChange={handleCustomerInputChange}
-                  onFocus={() => setCustomerDropdownOpen(true)}
-                  placeholder={
-                    loadingCustomers && customers.length === 0
-                      ? "Loading customers…"
-                      : "Select a customer (optional)"
-                  }
-                  style={{
-                    width: "100%",
-                    borderRadius: "6px",
-                    border: "1px solid #d1d5db",
-                    padding: "0.4rem 2rem 0.4rem 0.6rem",
-                    fontSize: "0.9rem",
-                    background: customers.length ? "#ffffff" : "#f9fafb",
-                    color:
-                      customers.length || customerSearch
-                        ? "#111827"
-                        : "#9ca3af",
-                  }}
-                  disabled={loadingCustomers && customers.length === 0}
-                />
-                {/* Little dropdown arrow, purely visual */}
-                <span
-                  style={{
-                    position: "absolute",
-                    right: "0.5rem",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    fontSize: "0.8rem",
-                    color: "#6b7280",
-                    pointerEvents: "none",
-                  }}
-                >
-                  ▾
-                </span>
-
-                {customerDropdownOpen &&
-                  customers.length > 0 &&
-                  limitedCustomers.length > 0 && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        zIndex: 10,
-                        marginTop: "0.2rem",
-                        left: 0,
-                        right: 0,
-                        maxHeight: "220px",
-                        overflowY: "auto",
-                        background: "#ffffff",
-                        borderRadius: "0.5rem",
-                        boxShadow:
-                          "0 10px 15px -3px rgba(15,23,42,0.1), 0 4px 6px -4px rgba(15,23,42,0.1)",
-                        border: "1px solid #e5e7eb",
-                      }}
-                    >
-                      {limitedCustomers.map((c) => {
-                        const label =
-                          c.name ||
-                          c.email ||
-                          (c.channel
-                            ? `Customer #${c.id} (${c.channel})`
-                            : `Customer #${c.id}`);
-                        return (
-                          <button
-                            key={c.id}
-                            type="button"
-                            onClick={() => handleCustomerSelect(c)}
-                            style={{
-                              width: "100%",
-                              textAlign: "left",
-                              padding: "0.4rem 0.6rem",
-                              border: "none",
-                              background: "transparent",
-                              fontSize: "0.85rem",
-                              cursor: "pointer",
-                            }}
-                            onMouseDown={(e) => e.preventDefault()}
-                          >
-                            <div style={{ fontWeight: 500 }}>{label}</div>
-                            {(c.email || c.channel) && (
-                              <div
-                                style={{
-                                  fontSize: "0.75rem",
-                                  color: "#6b7280",
-                                }}
-                              >
-                                {c.email}
-                                {c.email && c.channel ? " · " : ""}
-                                {c.channel}
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                      {filteredCustomers.length > limitedCustomers.length && (
-                        <div
-                          style={{
-                            padding: "0.35rem 0.6rem",
-                            fontSize: "0.75rem",
-                            color: "#6b7280",
-                            borderTop: "1px solid #e5e7eb",
-                            background: "#f9fafb",
-                          }}
-                        >
-                          …and {filteredCustomers.length - limitedCustomers.length}{" "}
-                          more. Refine search.
-                        </div>
-                      )}
-                    </div>
-                  )}
-              </div>
-
-              {customers.length === 0 &&
-                !loadingCustomers &&
-                !customersError && (
-                  <p
-                    style={{
-                      margin: "0.25rem 0 0",
-                      fontSize: "0.75rem",
-                      color: "#6b7280",
-                    }}
-                  >
-                    No customers yet. You can add them from the Customers page
-                    later.
-                  </p>
-                )}
-
-              {errorText("customer") && (
-                <p
-                  style={{
-                    margin: "0.15rem 0 0",
-                    fontSize: "0.75rem",
-                    color: "#b91c1c",
-                  }}
-                >
-                  {errorText("customer")}
-                </p>
-              )}
-            </div>
-
-            {/* Quantity + due date */}
-            <div style={{ display: "flex", gap: "0.75rem" }}>
-              <div style={{ flex: 1 }}>
-                <label
-                  style={{
-                    fontSize: "0.8rem",
-                    display: "block",
-                    marginBottom: 4,
-                  }}
-                >
-                  Quantity
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  style={{
-                    width: "100%",
-                    borderRadius: "6px",
-                    border: "1px solid #d1d5db",
-                    padding: "0.4rem 0.6rem",
-                    fontSize: "0.9rem",
-                  }}
-                />
-                {errorText("quantity") && (
-                  <p
-                    style={{
-                      margin: "0.15rem 0 0",
-                      fontSize: "0.75rem",
-                      color: "#b91c1c",
-                    }}
-                  >
-                    {errorText("quantity")}
-                  </p>
-                )}
-              </div>
-
-              <div style={{ flex: 1 }}>
-                <label
-                  style={{
-                    fontSize: "0.8rem",
-                    display: "block",
-                    marginBottom: 4,
-                  }}
-                >
-                  Due date
-                </label>
-                <input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  style={{
-                    width: "100%",
-                    borderRadius: "6px",
-                    border: "1px solid #d1d5db",
-                    padding: "0.4rem 0.6rem",
-                    fontSize: "0.9rem",
-                  }}
-                />
-                {errorText("due_date") && (
-                  <p
-                    style={{
-                      margin: "0.15rem 0 0",
-                      fontSize: "0.75rem",
-                      color: "#b91c1c",
-                    }}
-                  >
-                    {errorText("due_date")}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Expected price */}
-            <div>
-              <label
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 4,
-                }}
-              >
-                Expected price
-              </label>
+            <div style={{ marginTop: "0.4rem" }}>
+              <label className="form-label">Or enter Template ID</label>
               <input
                 type="number"
-                min="0"
-                step="0.01"
-                value={expectedPrice}
-                onChange={(e) => setExpectedPrice(e.target.value)}
-                placeholder={
-                  selectedTemplate?.base_price != null
-                    ? `Defaults from template base_price × quantity`
-                    : "Optional – will default from template if set"
-                }
-                style={{
-                  width: "100%",
-                  borderRadius: "6px",
-                  border: "1px solid #d1d5db",
-                  padding: "0.4rem 0.6rem",
-                  fontSize: "0.9rem",
-                }}
+                min="1"
+                value={templateId}
+                onChange={(e) => setTemplateId(e.target.value)}
+                className="form-input"
               />
-              {errorText("expected_price") && (
-                <p
-                  style={{
-                    margin: "0.15rem 0 0",
-                    fontSize: "0.75rem",
-                    color: "#b91c1c",
-                  }}
-                >
-                  {errorText("expected_price")}
-                </p>
-              )}
             </div>
+          )}
+        </div>
 
-            {/* Notes */}
-            <div>
-              <label
-                style={{
-                  fontSize: "0.8rem",
-                  display: "block",
-                  marginBottom: 4,
-                }}
-              >
-                Notes
-              </label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-                style={{
-                  width: "100%",
-                  borderRadius: "6px",
-                  border: "1px solid #d1d5db",
-                  padding: "0.4rem 0.6rem",
-                  fontSize: "0.9rem",
-                  resize: "vertical",
-                }}
-              />
-              {errorText("notes") && (
-                <p
-                  style={{
-                    margin: "0.15rem 0 0",
-                    fontSize: "0.75rem",
-                    color: "#b91c1c",
-                  }}
-                >
-                  {errorText("notes")}
-                </p>
-              )}
-            </div>
+        {/* Project name */}
+        <div className="form-field form-field--full">
+          <label className="form-label">Project name</label>
+          <input
+            className="form-input"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={
+              selectedTemplate?.name
+                ? `Defaults to template name: ${selectedTemplate.name}`
+                : "Optional display name"
+            }
+          />
+          {errorText("name") && (
+            <p className="text-error" style={{ marginTop: "0.15rem" }}>
+              {errorText("name")}
+            </p>
+          )}
+        </div>
 
-            {/* Selected template summary */}
-            {selectedTemplate && (
-              <div
-                style={{
-                  marginTop: "0.25rem",
-                  padding: "0.5rem 0.6rem",
-                  borderRadius: "0.5rem",
-                  background: "#f3f4f6",
-                  fontSize: "0.8rem",
-                  color: "#4b5563",
-                }}
-              >
-                <strong>{selectedTemplate.name}</strong>
-                {selectedTemplate.base_price != null && (
-                  <>
-                    {" · Base price: "}
-                    {selectedTemplate.base_price}{" "}
-                    {selectedTemplate.currency || ""}
-                  </>
-                )}
-                {selectedTemplate.estimated_labor_hours != null && (
-                  <>
-                    {" · Est. hours: "}
-                    {selectedTemplate.estimated_labor_hours}
-                  </>
-                )}
-              </div>
-            )}
+        {/* Customer combobox */}
+        <div className="form-field form-field--full">
+          <label className="form-label">Customer</label>
 
-            {/* Actions */}
-            <div
+          {customersError && (
+            <p
               style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: "0.5rem",
-                marginTop: "0.5rem",
+                margin: "0 0 0.35rem",
+                fontSize: "0.75rem",
+                color: "#fbbf24",
               }}
             >
-              <button
-                type="button"
-                onClick={onClose}
+              {customersError} You can still create a project without linking a
+              customer.
+            </p>
+          )}
+
+          <div style={{ position: "relative" }}>
+            <input
+              type="text"
+              className="form-input"
+              value={customerSearch}
+              onChange={handleCustomerInputChange}
+              onFocus={() => setCustomerDropdownOpen(true)}
+              placeholder={
+                loadingCustomers && customers.length === 0
+                  ? "Loading customers…"
+                  : "Select a customer (optional)"
+              }
+              disabled={loadingCustomers && customers.length === 0}
+              style={{ paddingRight: "1.6rem" }}
+            />
+            {/* Little dropdown arrow, purely visual */}
+            <span
+              style={{
+                position: "absolute",
+                right: "0.5rem",
+                top: "50%",
+                transform: "translateY(-50%)",
+                fontSize: "0.8rem",
+                color: "#9ca3af",
+                pointerEvents: "none",
+              }}
+            >
+              ▾
+            </span>
+
+            {customerDropdownOpen &&
+              customers.length > 0 &&
+              limitedCustomers.length > 0 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    zIndex: 10,
+                    marginTop: "0.2rem",
+                    left: 0,
+                    right: 0,
+                    maxHeight: "220px",
+                    overflowY: "auto",
+                    background: "#111827",
+                    borderRadius: "0.5rem",
+                    boxShadow:
+                      "0 10px 15px -3px rgba(15,23,42,0.5), 0 4px 6px -4px rgba(15,23,42,0.5)",
+                    border: "1px solid #374151",
+                  }}
+                >
+                  {limitedCustomers.map((c) => {
+                    const label =
+                      c.name ||
+                      c.email ||
+                      (c.channel
+                        ? `Customer #${c.id} (${c.channel})`
+                        : `Customer #${c.id}`);
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => handleCustomerSelect(c)}
+                        style={{
+                          width: "100%",
+                          textAlign: "left",
+                          padding: "0.4rem 0.6rem",
+                          border: "none",
+                          background: "transparent",
+                          fontSize: "0.85rem",
+                          cursor: "pointer",
+                          color: "#e5e7eb",
+                        }}
+                        onMouseDown={(e) => e.preventDefault()}
+                      >
+                        <div style={{ fontWeight: 500 }}>{label}</div>
+                        {(c.email || c.channel) && (
+                          <div
+                            style={{
+                              fontSize: "0.75rem",
+                              color: "#9ca3af",
+                            }}
+                          >
+                            {c.email}
+                            {c.email && c.channel ? " · " : ""}
+                            {c.channel}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                  {filteredCustomers.length > limitedCustomers.length && (
+                    <div
+                      style={{
+                        padding: "0.35rem 0.6rem",
+                        fontSize: "0.75rem",
+                        color: "#9ca3af",
+                        borderTop: "1px solid #374151",
+                        background: "#030712",
+                      }}
+                    >
+                      …and {filteredCustomers.length - limitedCustomers.length}{" "}
+                      more. Refine search.
+                    </div>
+                  )}
+                </div>
+              )}
+          </div>
+
+          {customers.length === 0 &&
+            !loadingCustomers &&
+            !customersError && (
+              <p
                 style={{
-                  borderRadius: "8px",
-                  border: "1px solid #d1d5db",
-                  padding: "0.45rem 0.9rem",
-                  fontSize: "0.9rem",
-                  background: "#ffffff",
-                  cursor: "pointer",
+                  margin: "0.25rem 0 0",
+                  fontSize: "0.75rem",
+                  color: "#9ca3af",
                 }}
-                disabled={loading}
               >
-                Cancel
-              </button>
-              <button type="submit" className="btn" disabled={loading}>
-                {loading ? "Creating…" : "Create project"}
-              </button>
-            </div>
-          </form>
+                No customers yet. You can add them from the Customers page
+                later.
+              </p>
+            )}
+
+          {errorText("customer") && (
+            <p className="text-error" style={{ marginTop: "0.15rem" }}>
+              {errorText("customer")}
+            </p>
+          )}
         </div>
-      </div>
-    </div>
+
+        {/* Quantity + due date */}
+        <div className="form-field">
+          <label className="form-label">Quantity</label>
+          <input
+            className="form-input"
+            type="number"
+            min="1"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+          />
+          {errorText("quantity") && (
+            <p className="text-error" style={{ marginTop: "0.15rem" }}>
+              {errorText("quantity")}
+            </p>
+          )}
+        </div>
+
+        <div className="form-field">
+          <label className="form-label">Due date</label>
+          <input
+            className="form-input"
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+          />
+          {errorText("due_date") && (
+            <p className="text-error" style={{ marginTop: "0.15rem" }}>
+              {errorText("due_date")}
+            </p>
+          )}
+        </div>
+
+        {/* Expected price */}
+        <div className="form-field form-field--full">
+          <label className="form-label">Expected price</label>
+          <input
+            className="form-input"
+            type="number"
+            min="0"
+            step="0.01"
+            value={expectedPrice}
+            onChange={(e) => setExpectedPrice(e.target.value)}
+            placeholder={
+              selectedTemplate?.base_price != null
+                ? `Defaults from template base_price × quantity`
+                : "Optional – will default from template if set"
+            }
+          />
+          {errorText("expected_price") && (
+            <p className="text-error" style={{ marginTop: "0.15rem" }}>
+              {errorText("expected_price")}
+            </p>
+          )}
+        </div>
+
+        {/* Notes */}
+        <div className="form-field form-field--full">
+          <label className="form-label">Notes</label>
+          <textarea
+            className="form-input form-textarea"
+            rows={3}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Optional internal notes about this project."
+          />
+          {errorText("notes") && (
+            <p className="text-error" style={{ marginTop: "0.15rem" }}>
+              {errorText("notes")}
+            </p>
+          )}
+        </div>
+
+        {/* Selected template summary */}
+        {selectedTemplate && (
+          <div
+            className="form-field form-field--full"
+            style={{
+              marginTop: "0.25rem",
+              padding: "0.5rem 0.6rem",
+              borderRadius: "0.5rem",
+              background: "#020617",
+              border: "1px solid #1f2937",
+              fontSize: "0.8rem",
+              color: "#e5e7eb",
+            }}
+          >
+            <strong>{selectedTemplate.name}</strong>
+            {selectedTemplate.base_price != null && (
+              <>
+                {" · Base price: "}
+                {selectedTemplate.base_price}{" "}
+                {selectedTemplate.currency || ""}
+              </>
+            )}
+            {selectedTemplate.estimated_labor_hours != null && (
+              <>
+                {" · Est. hours: "}
+                {selectedTemplate.estimated_labor_hours}
+              </>
+            )}
+          </div>
+        )}
+      </form>
+    </Modal>
   );
 }
 
@@ -1803,22 +1581,10 @@ export default function Projects() {
       </div>
 
       {/* Table */}
-      <div className="settings-card" style={{ padding: 0 }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            fontSize: "0.9rem",
-          }}
-        >
+      <div className="settings-card settings-card--table">
+        <table className="table table-striped">
           <thead>
-            <tr
-              style={{
-                background: "#f3f4f6",
-                textAlign: "left",
-                color: "#374151",
-              }}
-            >
+            <tr>
               {[
                 "Project",
                 "Template",
@@ -1830,47 +1596,24 @@ export default function Projects() {
                 "Status",
                 "Actions",
               ].map((h) => (
-                <th
-                  key={h}
-                  style={{
-                    padding: "0.65rem 0.75rem",
-                    fontWeight: 600,
-                    fontSize: "0.8rem",
-                    borderBottom: "1px solid #e5e7eb",
-                  }}
-                >
-                  {h}
-                </th>
+                <th key={h}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {list.length === 0 && (
               <tr>
-                <td
-                  colSpan={9}
-                  style={{
-                    textAlign: "center",
-                    padding: "1.2rem",
-                    color: "#6b7280",
-                  }}
-                >
+                <td colSpan={9} className="table-empty-row">
                   No matching projects.
                 </td>
               </tr>
             )}
 
             {list.map((p) => {
-              const rush = isRush(p); // ⭐ RUSH tag per-row
+              const rush = isRush(p);
               return (
-                <tr
-                  key={p.id}
-                  style={{
-                    borderBottom: "1px solid #e5e7eb",
-                  }}
-                >
-                  <td style={{ padding: "0.6rem 0.75rem" }}>
-                    {/* Project name + Rush pill */}
+                <tr key={p.id}>
+                  <td>
                     <div
                       style={{
                         display: "flex",
@@ -1900,38 +1643,28 @@ export default function Projects() {
                       )}
                     </div>
                   </td>
-                  <td style={{ padding: "0.6rem 0.75rem" }}>
-                    {p.template_name || "—"}
-                  </td>
-                  <td style={{ padding: "0.6rem 0.75rem" }}>
+                  <td>{p.template_name || "—"}</td>
+                  <td>
                     {p.customer_name ? (
-  <Link to={`/customers/${p.customer}`}>
-    {p.customer_name}
-  </Link>
-) : (
-  "—"
-)}
-
+                      <Link to={`/customers/${p.customer}`}>
+                        {p.customer_name}
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
                   </td>
-                  <td style={{ padding: "0.6rem 0.75rem" }}>
-                    {p.workflow_name || "—"}
-                  </td>
-                  <td style={{ padding: "0.6rem 0.75rem" }}>
-                    {p.current_stage_name || "—"}
-                  </td>
-                  <td style={{ padding: "0.6rem 0.75rem" }}>
-                    {formatDate(p.due_date)}
-                  </td>
+                  <td>{p.workflow_name || "—"}</td>
+                  <td>{p.current_stage_name || "—"}</td>
+                  <td>{formatDate(p.due_date)}</td>
                   <td
                     style={{
-                      padding: "0.6rem 0.75rem",
                       textAlign: "right",
                       whiteSpace: "nowrap",
                     }}
                   >
                     {formatMoney(p.expected_price)}
                   </td>
-                  <td style={{ padding: "0.6rem 0.75rem" }}>
+                  <td>
                     <span
                       style={{
                         padding: "0.25rem 0.6rem",
@@ -1956,12 +1689,7 @@ export default function Projects() {
                       {p.status || "—"}
                     </span>
                   </td>
-                  <td
-                    style={{
-                      padding: "0.6rem 0.75rem",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
+                  <td style={{ whiteSpace: "nowrap" }}>
                     {p.status === "active" && (
                       <>
                         <button
@@ -2028,6 +1756,7 @@ export default function Projects() {
           </tbody>
         </table>
       </div>
+
 
       <NewProjectModal
         open={showNewModal}

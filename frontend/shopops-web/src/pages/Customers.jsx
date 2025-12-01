@@ -600,22 +600,10 @@ export default function Customers() {
       </div>
 
       {/* Table */}
-      <div className="settings-card" style={{ padding: 0 }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            fontSize: "0.9rem",
-          }}
-        >
+      <div className="settings-card settings-card--table">
+        <table className="table table-striped">
           <thead>
-            <tr
-              style={{
-                background: "#f3f4f6",
-                textAlign: "left",
-                color: "#374151",
-              }}
-            >
+            <tr>
               {[
                 "Customer",
                 "Contact",
@@ -627,85 +615,55 @@ export default function Customers() {
                 "Status",
                 "Actions",
               ].map((h) => (
-                <th
-                  key={h}
-                  style={{
-                    padding: "0.65rem 0.75rem",
-                    fontWeight: 600,
-                    fontSize: "0.8rem",
-                    borderBottom: "1px solid #e5e7eb",
-                  }}
-                >
-                  {h}
-                </th>
+                <th key={h}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {list.length === 0 && (
               <tr>
-                <td
-                  colSpan={9}
-                  style={{
-                    textAlign: "center",
-                    padding: "1.2rem",
-                    color: "#6b7280",
-                  }}
-                >
+                <td colSpan={9} className="table-empty-row">
                   No customers yet.
                 </td>
               </tr>
             )}
 
             {list.map((c) => (
-              <tr
-                key={c.id}
-                style={{
-                  borderBottom: "1px solid #e5e7eb",
-                }}
-              >
-                <td style={{ padding: "0.6rem 0.75rem" }}>
-  <div style={{ fontWeight: 500 }}>
-    <Link to={`/customers/${c.id}`}>{c.name}</Link>
-  </div>
-  {c.notes && (
-    <div
-      style={{
-        fontSize: "0.75rem",
-        color: "#6b7280",
-        maxWidth: "260px",
-        whiteSpace: "nowrap",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-      }}
-    >
-      {c.notes}
-    </div>
-  )}
-</td>
-                <td style={{ padding: "0.6rem 0.75rem" }}>
+              <tr key={c.id}>
+                <td>
+                  <div style={{ fontWeight: 500 }}>
+                    <Link to={`/customers/${c.id}`}>{c.name}</Link>
+                  </div>
+                  {c.notes && (
+                    <div
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "#9ca3af",
+                        maxWidth: "260px",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {c.notes}
+                    </div>
+                  )}
+                </td>
+                <td>
                   {c.email && (
                     <div style={{ fontSize: "0.8rem" }}>{c.email}</div>
                   )}
                   {c.phone && (
-                    <div style={{ fontSize: "0.8rem", color: "#4b5563" }}>
+                    <div style={{ fontSize: "0.8rem", color: "#cbd5f5" }}>
                       {c.phone}
                     </div>
                   )}
                 </td>
-                <td style={{ padding: "0.6rem 0.75rem" }}>
-                  {c.channel || "—"}
-                </td>
-                <td style={{ padding: "0.6rem 0.75rem" }}>
-                  {c.total_projects ?? 0}
-                </td>
-                <td style={{ padding: "0.6rem 0.75rem" }}>
-                  {c.total_products ?? 0}
-                </td>
-                <td style={{ padding: "0.6rem 0.75rem" }}>
-                  {formatTenure(c.tenure_days)}
-                </td>
-                <td style={{ padding: "0.6rem 0.75rem" }}>
+                <td>{c.channel || "—"}</td>
+                <td>{c.total_projects ?? 0}</td>
+                <td>{c.total_products ?? 0}</td>
+                <td>{formatTenure(c.tenure_days)}</td>
+                <td>
                   <button
                     type="button"
                     onClick={() => handleToggleVip(c)}
@@ -714,14 +672,15 @@ export default function Customers() {
                       border: "1px solid #e5e7eb",
                       padding: "0.15rem 0.5rem",
                       fontSize: "0.75rem",
-                      background: c.is_vip ? "#fef3c7" : "#ffffff",
+                      background: c.is_vip ? "#fef3c7" : "#111827",
                       cursor: "pointer",
+                      color: c.is_vip ? "#92400e" : "#e5e7eb",
                     }}
                   >
                     {c.is_vip ? "VIP" : "Standard"}
                   </button>
                 </td>
-                <td style={{ padding: "0.6rem 0.75rem" }}>
+                <td>
                   <span
                     style={{
                       padding: "0.25rem 0.6rem",
@@ -734,33 +693,31 @@ export default function Customers() {
                     {c.is_active ? "Active" : "Inactive"}
                   </span>
                 </td>
-                <td
-                  style={{
-                    padding: "0.6rem 0.75rem",
-                    whiteSpace: "nowrap",
-                  }}
-                >
+                <td style={{ whiteSpace: "nowrap" }}>
                   <button
-                    type="button"
-                    onClick={() => handleToggleActive(c)}
-                    style={{
-                      borderRadius: "999px",
-                      border: "1px solid #d1d5db",
-                      padding: "0.15rem 0.6rem",
-                      fontSize: "0.75rem",
-                      background: "#ffffff",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {c.is_active ? "Archive" : "Unarchive"}
-                  </button>
-                  {/* Future: add “View details” when we build CustomerDetail.jsx */}
+  type="button"
+  onClick={() => handleToggleActive(c)}
+  style={{
+    borderRadius: "999px",
+    padding: "0.2rem 0.65rem",
+    fontSize: "0.75rem",
+    fontWeight: 600,
+    cursor: "pointer",
+    border: "1px solid",
+    background: c.is_active ? "#fee2e2" : "#dbeafe",
+    borderColor: c.is_active ? "#fecaca" : "#bfdbfe",
+    color: c.is_active ? "#991b1b" : "#1e3a8a",
+  }}
+>
+  {c.is_active ? "Archive" : "Unarchive"}
+</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
 
       <NewCustomerModal
         open={showNewModal}

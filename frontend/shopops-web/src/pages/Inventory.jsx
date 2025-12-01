@@ -1,7 +1,11 @@
 // src/pages/Inventory.jsx
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { fetchInventory } from "../api/inventory";
+import { useLocation } from "react-router-dom";
+import {
+  fetchMaterials,
+  fetchConsumables,
+  fetchEquipment,
+} from "../api/inventory";
 
 function formatDate(dateString) {
   if (!dateString) return "—";
@@ -14,37 +18,71 @@ function formatMoney(amount) {
   return `$${Number(amount).toFixed(2)}`;
 }
 
+const TYPE_CONFIG = {
+  materials: {
+    title: "Materials",
+    blurb:
+      "Core stuff that becomes part of the finished work — lumber, fabric, resin blanks, sheet metal, clay, filament, etc.",
+  },
+  consumables: {
+    title: "Consumables",
+    blurb:
+      "Supplies that get used up while you work — sandpaper, finishes, glue, resin, thread, blades, printer nozzles, etc.",
+  },
+  equipment: {
+    title: "Equipment",
+    blurb:
+      "Tools and machines that do the work — saws, lathes, sewing machines, printers, CNC, presses, and other durable gear.",
+  },
+};
+
 export default function Inventory() {
+  const location = useLocation();
+
+  // Decide which type we're viewing based on the URL
+  let mode = "materials";
+  if (location.pathname.includes("/inventory/consumables")) {
+    mode = "consumables";
+  } else if (location.pathname.includes("/inventory/equipment")) {
+    mode = "equipment";
+  } else {
+    mode = "materials"; // default for /inventory and /inventory/materials
+  }
+
+  const { title, blurb } = TYPE_CONFIG[mode];
+
   const [items, setItems] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all"); // active/all if you expose that later
+  const [statusFilter, setStatusFilter] = useState("all"); // all | active | inactive
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load inventory
+  // Load inventory for current mode
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       setLoading(true);
       setError(null);
-
       try {
-        const data = await fetchInventory();
-        const items =
-          Array.isArray(data) ?
-            data :
-            Array.isArray(data?.results) ?
-              data.results :
-              [];
+        let fetchFn = fetchMaterials;
+        if (mode === "consumables") fetchFn = fetchConsumables;
+        if (mode === "equipment") fetchFn = fetchEquipment;
+
+        const data = await fetchFn();
+        const items = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.results)
+          ? data.results
+          : [];
 
         if (!cancelled) {
           setItems(items);
           setFiltered(items);
         }
       } catch (err) {
-        console.error("fetchInventory error:", err);
+        console.error("inventory load error:", err);
         if (!cancelled) {
           setError(err.message || "Failed to load inventory");
         }
@@ -57,7 +95,7 @@ export default function Inventory() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [mode]); // re-run when URL switches between materials / consumables / equipment
 
   // Filtering / search
   useEffect(() => {
@@ -65,7 +103,6 @@ export default function Inventory() {
 
     if (search.trim()) {
       const term = search.toLowerCase();
-
       list = list.filter((item) => {
         const haystack = [
           item.name,
@@ -77,13 +114,11 @@ export default function Inventory() {
           .filter(Boolean)
           .join(" ")
           .toLowerCase();
-
         return haystack.includes(term);
       });
     }
 
     if (statusFilter !== "all") {
-      // if backend exposes something like is_active, status, etc.
       if (statusFilter === "active") {
         list = list.filter((item) => item.is_active !== false);
       } else if (statusFilter === "inactive") {
@@ -100,8 +135,8 @@ export default function Inventory() {
     return (
       <div className="page">
         <div className="page-header">
-          <h1>Inventory</h1>
-          <p>Track what you have on hand, what’s reserved, and what’s free to sell.</p>
+          <h1>{title}</h1>
+          <p>{blurb}</p>
         </div>
         <p>Loading…</p>
       </div>
@@ -112,8 +147,8 @@ export default function Inventory() {
     return (
       <div className="page">
         <div className="page-header">
-          <h1>Inventory</h1>
-          <p>Track what you have on hand, what’s reserved, and what’s free to sell.</p>
+          <h1>{title}</h1>
+          <p>{blurb}</p>
         </div>
         <p className="text-error">{error}</p>
         <button onClick={() => window.location.reload()} className="btn">
@@ -126,8 +161,8 @@ export default function Inventory() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Inventory</h1>
-        <p>Snapshot of your materials, components, and finished goods.</p>
+        <h1>{title}</h1>
+        <p>{blurb}</p>
       </div>
 
       {/* Filters */}
@@ -138,6 +173,8 @@ export default function Inventory() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          gap: "1rem",
+          flexWrap: "wrap",
         }}
       >
         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
@@ -150,6 +187,7 @@ export default function Inventory() {
               borderRadius: "6px",
               padding: "0.4rem 0.6rem",
               fontSize: "0.9rem",
+              minWidth: "220px",
             }}
           />
           <select
@@ -171,30 +209,13 @@ export default function Inventory() {
             {list.length} shown
           </span>
         </div>
-
-        {/* Future: “New inventory item” button once you’re ready for a modal */}
-        {/* <button className="btn" onClick={() => setShowNewModal(true)}>
-          + New item
-        </button> */}
       </div>
 
       {/* Table */}
-      <div className="settings-card" style={{ padding: 0 }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            fontSize: "0.9rem",
-          }}
-        >
+      <div className="settings-card settings-card--table">
+        <table className="table table-striped">
           <thead>
-            <tr
-              style={{
-                background: "#f3f4f6",
-                textAlign: "left",
-                color: "#374151",
-              }}
-            >
+            <tr>
               {[
                 "Item",
                 "SKU",
@@ -206,38 +227,20 @@ export default function Inventory() {
                 "Location",
                 "Updated",
               ].map((h) => (
-                <th
-                  key={h}
-                  style={{
-                    padding: "0.65rem 0.75rem",
-                    fontWeight: 600,
-                    fontSize: "0.8rem",
-                    borderBottom: "1px solid #e5e7eb",
-                  }}
-                >
-                  {h}
-                </th>
+                <th key={h}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {list.length === 0 && (
               <tr>
-                <td
-                  colSpan={9}
-                  style={{
-                    textAlign: "center",
-                    padding: "1.2rem",
-                    color: "#6b7280",
-                  }}
-                >
-                  No inventory items yet.
+                <td colSpan={9} className="table-empty-row">
+                  No {title.toLowerCase()} yet.
                 </td>
               </tr>
             )}
 
             {list.map((item) => {
-              // Be defensive about field names so you can adapt the serializer
               const name =
                 item.name ||
                 item.display_name ||
@@ -246,6 +249,7 @@ export default function Inventory() {
               const templateName =
                 item.template_name || item.product_template || "—";
               const sku = item.sku || item.code || "—";
+
               const qtyOnHand =
                 item.quantity_on_hand ??
                 item.on_hand ??
@@ -262,55 +266,27 @@ export default function Inventory() {
                 (qtyOnHand != null && qtyReserved != null
                   ? qtyOnHand - qtyReserved
                   : null);
+
               const unitCost =
-                item.unit_cost ??
-                item.cost_per_unit ??
-                item.average_cost ??
-                null;
+                item.unit_cost ?? item.cost_per_unit ?? item.average_cost ?? null;
 
               return (
-                <tr
-                  key={item.id}
-                  style={{
-                    borderBottom: "1px solid #e5e7eb",
-                  }}
-                >
-                  <td style={{ padding: "0.6rem 0.75rem" }}>
-                    <Link to={`/inventory/${item.id}`}>{name}</Link>
-                  </td>
-                  <td style={{ padding: "0.6rem 0.75rem" }}>{sku}</td>
-                  <td style={{ padding: "0.6rem 0.75rem" }}>{templateName}</td>
-                  <td style={{ padding: "0.6rem 0.75rem" }}>
-                    {qtyOnHand != null ? qtyOnHand : "—"}
-                  </td>
-                  <td style={{ padding: "0.6rem 0.75rem" }}>
-                    {qtyReserved != null ? qtyReserved : "—"}
-                  </td>
-                  <td style={{ padding: "0.6rem 0.75rem" }}>
-                    {qtyAvailable != null ? qtyAvailable : "—"}
-                  </td>
-                  <td
-                    style={{
-                      padding: "0.6rem 0.75rem",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {unitCost != null ? formatMoney(unitCost) : "—"}
-                  </td>
-                  <td style={{ padding: "0.6rem 0.75rem" }}>
-                    {item.location || item.bin || "—"}
-                  </td>
-                  <td style={{ padding: "0.6rem 0.75rem" }}>
-                    {formatDate(item.updated_at || item.modified_at)}
-                  </td>
+                <tr key={item.id}>
+                  <td>{name}</td>
+                  <td>{sku}</td>
+                  <td>{templateName}</td>
+                  <td>{qtyOnHand != null ? qtyOnHand : "—"}</td>
+                  <td>{qtyReserved != null ? qtyReserved : "—"}</td>
+                  <td>{qtyAvailable != null ? qtyAvailable : "—"}</td>
+                  <td>{unitCost != null ? formatMoney(unitCost) : "—"}</td>
+                  <td>{item.location || item.bin || "—"}</td>
+                  <td>{formatDate(item.updated_at || item.modified_at)}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
-
-      {/* Future: NewInventoryItemModal goes here */}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 // src/router/AppRouter.jsx
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "../pages/Dashboard";
 import Settings from "../pages/Settings";
 import Projects from "../pages/Projects";
@@ -12,37 +12,47 @@ import ProjectDetail from "../pages/ProjectDetail";
 import Customers from "../pages/Customers";
 import CustomerDetail from "../pages/CustomerDetail";
 import ProjectsBoard from "../pages/ProjectsBoard";
+import ProjectCreate from "../pages/ProjectCreate";
 import Inventory from "../pages/Inventory";
 
 function AppRouter() {
   return (
     <Routes>
+      {/* Public */}
       <Route path="/login" element={<Login />} />
 
+      {/* Redirect root "/" -> "/dashboard" */}
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+      {/* Dashboard */}
       <Route
-        path="/"
+        path="/dashboard"
         element={
           <RequireAuth>
             <Dashboard />
           </RequireAuth>
         }
       />
+
+      {/* Customers */}
       <Route
         path="/customers"
         element={
-        <RequireAuth>
-          <Customers />
-        </RequireAuth>
+          <RequireAuth>
+            <Customers />
+          </RequireAuth>
         }
       />
       <Route
-  path="/customers/:id"
-  element={
-    <RequireAuth>
-      <CustomerDetail />
-    </RequireAuth>
-  }
-/>
+        path="/customers/:id"
+        element={
+          <RequireAuth>
+            <CustomerDetail />
+          </RequireAuth>
+        }
+      />
+
+      {/* Settings */}
       <Route
         path="/settings"
         element={
@@ -51,6 +61,8 @@ function AppRouter() {
           </RequireAuth>
         }
       />
+
+      {/* Projects */}
       <Route
         path="/projects"
         element={
@@ -60,14 +72,31 @@ function AppRouter() {
         }
       />
       <Route
-    path="/projects/:id"
-    element={
-      <RequireAuth>
-        <ProjectDetail />
-      </RequireAuth>
-    }
-  />
-  <Route path="/projects/board" element={<ProjectsBoard />} />
+        path="/projects/new"
+        element={
+          <RequireAuth>
+            <ProjectCreate />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/projects/:id"
+        element={
+          <RequireAuth>
+            <ProjectDetail />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/projects/board"
+        element={
+          <RequireAuth>
+            <ProjectsBoard />
+          </RequireAuth>
+        }
+      />
+
+      {/* Workflows */}
       <Route
         path="/workflows"
         element={
@@ -85,8 +114,41 @@ function AppRouter() {
         }
       />
 
-      <Route path="/inventory" element={<Inventory />} />
+      {/* Inventory */}
+      <Route
+        path="/inventory/materials"
+        element={
+          <RequireAuth>
+            <Inventory />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/inventory/consumables"
+        element={
+          <RequireAuth>
+            <Inventory />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/inventory/equipment"
+        element={
+          <RequireAuth>
+            <Inventory />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/inventory"
+        element={
+          <RequireAuth>
+            <Inventory />
+          </RequireAuth>
+        }
+      />
 
+      {/* Catch-all */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
