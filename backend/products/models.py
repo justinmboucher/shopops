@@ -6,7 +6,6 @@ from inventory.models import Material, Equipment
 
 class ProductTemplate(models.Model):
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name="templates")
-
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     category = models.CharField(max_length=100, blank=True)
@@ -21,20 +20,49 @@ class ProductTemplate(models.Model):
     )
 
     estimated_labor_hours = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0
+        max_digits=10,
+        decimal_places=2,
+        default=0,
     )
     hourly_rate = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True, blank=True
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
     )
     estimated_consumables_cost = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0
+        max_digits=10,
+        decimal_places=2,
+        default=0,
     )
+
+    # NEW: ML-friendly summary fields
+    average_material_cost = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Historical average material cost for this template.",
+    )
+    average_consumable_cost = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Historical average consumable cost for this template.",
+    )
+
     base_price = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True, blank=True
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
     )
 
     equipment = models.ManyToManyField(
-        Equipment, related_name="templates", blank=True
+        Equipment,
+        related_name="templates",
+        blank=True,
     )
 
     is_active = models.BooleanField(default=True)
@@ -44,7 +72,6 @@ class ProductTemplate(models.Model):
 
     def __str__(self) -> str:
         return self.name
-
 
 class BOMItem(models.Model):
     template = models.ForeignKey(

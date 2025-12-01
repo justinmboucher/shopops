@@ -21,6 +21,11 @@ class SaleSerializer(serializers.ModelSerializer):
             "channel",
             "price",
             "fees",
+            "platform_fees",     # NEW
+            "shipping_cost",     # NEW
+            "tax_amount",        # NEW
+            "cost_of_goods",     # NEW
+            "gross_margin",      # NEW
             "currency",
             "sold_at",
             "notes",

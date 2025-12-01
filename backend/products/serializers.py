@@ -22,9 +22,6 @@ class BOMItemSerializer(serializers.ModelSerializer):
 
 
 class ProductTemplateSerializer(serializers.ModelSerializer):
-    workflow_name = serializers.CharField(source="workflow.name", read_only=True)
-    bom_items = BOMItemSerializer(many=True, required=False)
-
     class Meta:
         model = ProductTemplate
         fields = [
@@ -35,18 +32,17 @@ class ProductTemplateSerializer(serializers.ModelSerializer):
             "category",
             "image",
             "workflow",
-            "workflow_name",
             "estimated_labor_hours",
             "hourly_rate",
             "estimated_consumables_cost",
             "base_price",
-            "equipment",  # list of IDs
+            "equipment",
             "is_active",
-            "bom_items",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["shop", "created_at", "updated_at"]
+        read_only_fields = ["id", "shop", "created_at", "updated_at"]
+
 
     def _get_shop(self):
         request = self.context.get("request")

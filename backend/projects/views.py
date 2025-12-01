@@ -1,5 +1,4 @@
 from django.utils import timezone
-
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -12,15 +11,18 @@ from workflows.models import WorkflowStage, ProjectStageHistory
 from sales.models import Sale
 from sales.serializers import SaleSerializer
 
+
 class ProjectViewSet(viewsets.ModelViewSet):
     """
     API endpoints for projects.
 
-    - GET /api/projects/            -> list projects for current user's shop
-    - POST /api/projects/           -> create a project (from template)
-    - GET /api/projects/{id}/       -> retrieve a project
-    - PATCH /api/projects/{id}/     -> update certain fields (later)
-    - POST /api/projects/{id}/move/ -> move project to a new stage
+    - GET    /api/projects/           -> list projects for current user's shop
+    - POST   /api/projects/           -> create a project (from template)
+    - GET    /api/projects/{id}/      -> retrieve a project
+    - PATCH  /api/projects/{id}/      -> update certain fields (later)
+    - POST   /api/projects/{id}/move/ -> move project to a new stage
+    - POST   /api/projects/{id}/cancel/
+    - POST   /api/projects/{id}/log_sale/
     """
 
     permission_classes = [IsAuthenticated]
@@ -48,64 +50,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="move")
     def move(self, request, pk=None):
         """
-        Move a project to a new workflow stage.
-
-        The stage may belong to a different workflow; in that case, the
-        project's workflow is updated to match the stage's workflow.
-        """
-        project = self.get_object()
-        stage_id = request.data.get("stage_id")
-
-        if not stage_id:
-            return Response(
-                {"stage_id": ["This field is required."]},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            stage_id_int = int(stage_id)
-        except (TypeError, ValueError):
-            return Response(
-                {"stage_id": ["Must be a valid integer."]},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            # Look up by id only
-            stage = WorkflowStage.objects.select_related("workflow", "workflow__shop").get(
-                id=stage_id_int
-            )
-        except WorkflowStage.DoesNotExist:
-            return Response(
-                {"detail": "Target stage does not exist."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Safety: make sure stage belongs to the same shop
-        if stage.workflow.shop_id != project.shop_id:
-            return Response(
-                {"detail": "Target stage belongs to a different shop."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # 🔑 Key part: allow switching workflows
-        project.workflow = stage.workflow
-        project.current_stage = stage
-
-        # If you later add “status per stage” logic, you can update status here.
-        # For now we leave project.status alone.
-
-        project.save()
-
-        serializer = self.get_serializer(project)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-        """
         Move a project to a new stage within its workflow.
 
         Expected payload:
         {
-          "stage_id": <int>
+            "stage_id": <int>
         }
         """
         project: Project = self.get_object()
@@ -133,7 +82,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         try:
             target_stage = WorkflowStage.objects.get(
-                id=stage_id, workflow=project.workflow
+                id=stage_id,
+                workflow=project.workflow,
             )
         except WorkflowStage.DoesNotExist:
             return Response(
@@ -158,18 +108,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(project)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    @action(detail=True, methods=["post"])
 
+    @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):
         """
         Cancel a project (client bailed, etc.).
 
         Expected payload (all optional except maybe reason in the UI):
-
         {
-          "reason": "Client changed mind",
-          "expected_price": 200.00,
-          "notes": "They might rebook later."
+            "reason": "Client changed mind",
+            "expected_price": 200.00,
+            "notes": "They might rebook later."
         }
         """
         project: Project = self.get_object()
@@ -210,7 +159,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project.status = "cancelled"
         project.cancel_stage = project.current_stage
         project.cancelled_at = timezone.now()
-
         project.save(
             update_fields=[
                 "expected_price",
@@ -233,11 +181,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         Expected payload:
         {
-          "price": 180.00,
-          "channel": "etsy",
-          "fees": 12.50,                  # optional
-          "sold_at": "2025-11-24T19:30:00Z",  # optional, defaults to now
-          "notes": "Sold at the holiday market."  # optional
+            "price": 180.00,
+            "channel": "etsy",
+            "fees": 12.50,                     # optional
+            "sold_at": "2025-11-24T19:30:00Z", # optional, defaults to now
+            "notes": "Sold at the holiday market."  # optional
         }
         """
         project: Project = self.get_object()
@@ -249,9 +197,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
             )
 
         if project.status == "completed":
-            # You could allow multiple sales per project, but for MVP we treat this as 1-to-1
+            # MVP: treat project↔sale as 1-to-1
             return Response(
-                {"detail": "This project is already completed. A sale may already exist."},
+                {
+                    "detail": (
+                        "This project is already completed. "
+                        "A sale may already exist."
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -283,9 +236,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
             notes=data.get("notes", ""),
         )
 
-        # Mark project completed
+        # Mark project completed + stamp completion time
         project.status = "completed"
-        project.save(update_fields=["status", "updated_at"])
+        project.completed_at = sold_at
+        project.save(update_fields=["status", "completed_at", "updated_at"])
 
         project_serializer = self.get_serializer(project)
         sale_serializer = SaleSerializer(sale)

@@ -10,6 +10,8 @@ class ProductTemplateAdmin(admin.ModelAdmin):
         "shop",
         "workflow",
         "base_price",
+        "average_material_cost",      # NEW
+        "average_consumable_cost",    # NEW
         "is_active",
     )
     list_filter = ("shop", "workflow", "is_active")

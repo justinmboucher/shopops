@@ -1,10 +1,12 @@
+# backend/projects/serializers.py
+
 from rest_framework import serializers
+from rest_framework import serializers as drf_serializers
 
 from core.models import Customer
 from products.models import ProductTemplate
 from workflows.models import WorkflowDefinition, WorkflowStage
-from projects.models import Project
-from rest_framework import serializers as drf_serializers
+from projects.models import Project, WorkLog
 from sales.models import Sale
 
 
@@ -13,14 +15,15 @@ class ProjectSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source="customer.name", read_only=True)
     workflow_name = serializers.CharField(source="workflow.name", read_only=True)
     current_stage_name = serializers.CharField(
-        source="current_stage.name", read_only=True
+        source="current_stage.name",
+        read_only=True,
     )
 
     class Meta:
         model = Project
         fields = [
             "id",
-            "shop",              # read-only, derived from user
+            "shop",  # read-only, derived from user
             "template",
             "template_name",
             "workflow",
@@ -33,6 +36,13 @@ class ProjectSerializer(serializers.ModelSerializer):
             "quantity",
             "image",
             "due_date",
+
+            # NEW lifecycle fields
+            "quoted_at",
+            "confirmed_at",
+            "started_at",
+            "completed_at",
+
             "estimated_hours",
             "actual_hours",
             "status",
@@ -54,6 +64,13 @@ class ProjectSerializer(serializers.ModelSerializer):
             "cancel_reason",
             "cancel_stage",
             "cancelled_at",
+
+            # lifecycle timestamps handled by backend logic
+            "quoted_at",
+            "confirmed_at",
+            "started_at",
+            "completed_at",
+
             "created_at",
             "updated_at",
         ]
@@ -64,12 +81,11 @@ class ProjectSerializer(serializers.ModelSerializer):
 
         - On create: template is required
         - On update: if template not provided, reuse existing instance.template
-        - Quantity must be >= 1 (using new value if provided, else existing)
+        - Quantity must be >= 1
         """
         # Figure out template (new value or existing one)
         template = attrs.get("template")
         if not template and self.instance is not None:
-            # partial update, fall back to existing template
             template = getattr(self.instance, "template", None)
 
         if not template:
@@ -95,18 +111,17 @@ class ProjectSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """
         Project creation rules:
-
         - shop = request.user.shop
         - workflow:
-            - template.workflow if set
-            - else shop's default workflow
+          - template.workflow if set
+          - else shop's default workflow
         - current_stage = first stage in workflow
         - estimated_hours:
-            - provided value OR
-            - template.estimated_labor_hours * quantity
+          - provided value OR
+          - template.estimated_labor_hours * quantity
         - expected_price:
-            - provided value OR
-            - template.base_price * quantity (if present)
+          - provided value OR
+          - template.base_price * quantity (if present)
         - status = "active"
         """
         request = self.context.get("request")
@@ -128,7 +143,9 @@ class ProjectSerializer(serializers.ModelSerializer):
         if workflow is None:
             workflow = (
                 WorkflowDefinition.objects.filter(
-                    shop=shop, is_default=True, is_active=True
+                    shop=shop,
+                    is_default=True,
+                    is_active=True,
                 ).first()
             )
         if workflow is None:
@@ -174,13 +191,12 @@ class ProjectSerializer(serializers.ModelSerializer):
             notes=validated_data.get("notes", ""),
         )
 
-        # Optionally, create initial ProjectStageHistory row later if desired
+        # Optionally: you can hook ProjectStageHistory here later
         return project
 
+
 class LogSaleSerializer(drf_serializers.Serializer):
-    price = drf_serializers.DecimalField(
-        max_digits=10, decimal_places=2
-    )
+    price = drf_serializers.DecimalField(max_digits=10, decimal_places=2)
     channel = drf_serializers.ChoiceField(
         choices=[c[0] for c in Sale.CHANNEL_CHOICES],
         default="other",
@@ -199,3 +215,28 @@ class LogSaleSerializer(drf_serializers.Serializer):
         required=False,
         allow_blank=True,
     )
+
+
+class WorkLogSerializer(serializers.ModelSerializer):
+    """
+    Serializer for work logs (time tracking) on a project.
+    """
+
+    project_name = serializers.CharField(source="project.name", read_only=True)
+    stage_name = serializers.CharField(source="stage.name", read_only=True)
+
+    class Meta:
+        model = WorkLog
+        fields = [
+            "id",
+            "project",
+            "project_name",
+            "stage",
+            "stage_name",
+            "started_at",
+            "ended_at",
+            "notes",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["created_at", "updated_at"]
