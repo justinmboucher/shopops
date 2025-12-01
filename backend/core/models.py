@@ -33,18 +33,53 @@ class Shop(models.Model):
 
 
 class Customer(models.Model):
-    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name="customers")
+    shop = models.ForeignKey(
+        Shop,
+        on_delete=models.CASCADE,
+        related_name="customers",
+    )
 
     name = models.CharField(max_length=200)
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=50, blank=True)
-    channel = models.CharField(max_length=100, blank=True)
+    channel = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Where this customer came from (Etsy, craft fair, Instagram, etc.)",
+    )
     notes = models.TextField(blank=True)
 
+    # NEW: address fields
+    address_line1 = models.CharField(max_length=200, blank=True)
+    address_line2 = models.CharField(max_length=200, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    postal_code = models.CharField(max_length=20, blank=True)
+    country = models.CharField(max_length=100, blank=True)
+
+     # NEW: optional avatar / logo image
+    avatar = models.ImageField(
+        upload_to="customer_avatars/",
+        blank=True,
+        null=True,
+    )
+
+    # Status flags
     is_active = models.BooleanField(default=True)
+    is_vip = models.BooleanField(
+        default=False,
+        help_text="Mark true for high-value / priority customers.",
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at", "name"]
+        indexes = [
+            models.Index(fields=["shop", "name"]),
+            models.Index(fields=["shop", "email"]),
+        ]
 
     def __str__(self) -> str:
         return self.name

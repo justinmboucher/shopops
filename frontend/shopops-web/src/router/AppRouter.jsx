@@ -9,6 +9,9 @@ import Login from "../pages/Login";
 import NotFound from "../pages/NotFound";
 import RequireAuth from "./RequireAuth";
 import ProjectDetail from "../pages/ProjectDetail";
+import Customers from "../pages/Customers";
+import CustomerDetail from "../pages/CustomerDetail";
+import ProjectsBoard from "../pages/ProjectsBoard";
 
 function AppRouter() {
   return (
@@ -23,6 +26,22 @@ function AppRouter() {
           </RequireAuth>
         }
       />
+      <Route
+        path="/customers"
+        element={
+        <RequireAuth>
+          <Customers />
+        </RequireAuth>
+        }
+      />
+      <Route
+  path="/customers/:id"
+  element={
+    <RequireAuth>
+      <CustomerDetail />
+    </RequireAuth>
+  }
+/>
       <Route
         path="/settings"
         element={
@@ -47,6 +66,7 @@ function AppRouter() {
       </RequireAuth>
     }
   />
+  <Route path="/projects/board" element={<ProjectsBoard />} />
       <Route
         path="/workflows"
         element={

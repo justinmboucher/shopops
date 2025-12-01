@@ -1,13 +1,14 @@
 # core/views.py
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Count
 
-from .models import Shop
-from .serializers import ShopSerializer, CurrentUserSerializer
+from .models import Shop, Customer
+from .serializers import ShopSerializer, CurrentUserSerializer, CustomerSerializer
 
 class MeView(APIView):
     """
@@ -59,3 +60,58 @@ class ShopView(generics.RetrieveUpdateAPIView):
         shop = serializer.save(owner=user)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class CustomerViewSet(viewsets.ModelViewSet):
+    """
+    CRUD API for customers of the current user's shop.
+
+    Endpoints (once wired with a router under /api/):
+    - GET    /api/customers/        -> list customers with metrics
+    - POST   /api/customers/        -> create customer
+    - GET    /api/customers/{id}/   -> retrieve single customer
+    - PUT    /api/customers/{id}/   -> full update
+    - PATCH  /api/customers/{id}/   -> partial update (detail page edits)
+    - DELETE /api/customers/{id}/   -> (optional) delete; you might rely on is_active instead
+    """
+
+    serializer_class = CustomerSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        try:
+            shop = user.shop
+        except Shop.DoesNotExist:
+            # No shop yet = no customers
+            return Customer.objects.none()
+
+        qs = Customer.objects.filter(shop=shop)
+
+        # Metrics:
+        # - total_projects: number of projects linked to this customer
+        # - total_products: rough count of distinct "things" they’ve bought
+        #
+        # This assumes Project has:
+        #   customer = ForeignKey(Customer, related_name="projects", ...)
+        # and a template/product field, adjust as needed:
+        #   projects__template  or  projects__product_template  etc.
+        qs = qs.annotate(
+            total_projects=Count("projects", distinct=True),
+            # TODO: adjust "projects__template" to your actual field if different.
+            total_products=Count("projects__template", distinct=True),
+        )
+
+        return qs
+
+    def perform_create(self, serializer):
+        """
+        Ensure the new customer is bound to the current user's shop.
+        """
+        user = self.request.user
+        try:
+            shop = user.shop
+        except Shop.DoesNotExist:
+            raise NotFound("Current user has no shop configured.")
+
+        serializer.save(shop=shop)

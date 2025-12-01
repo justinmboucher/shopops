@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Shop
+from .models import Shop, Customer
 
 
 class ShopSerializer(serializers.ModelSerializer):
@@ -28,3 +28,45 @@ class CurrentUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "username", "email", "first_name", "last_name"]
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    # Annotated metrics coming from queryset in CustomerViewSet
+    total_projects = serializers.IntegerField(read_only=True)
+    total_products = serializers.IntegerField(read_only=True)
+    tenure_days = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Customer
+        fields = [
+            "id",
+            "shop",
+            "name",
+            "email",
+            "phone",
+            "channel",
+            "notes",
+            "is_vip",
+            "address_line1",
+            "address_line2",
+            "city",
+            "state",
+            "postal_code",
+            "country",
+            "avatar",
+            "is_active",
+            "total_projects",
+            "total_products",
+            "tenure_days",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "shop",
+            "total_projects",
+            "total_products",
+            "tenure_days",
+            "created_at",
+            "updated_at",
+        ]

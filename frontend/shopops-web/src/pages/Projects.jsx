@@ -9,6 +9,7 @@ import {
   moveProjectStage,
 } from "../api/projects";
 import { fetchProductTemplates } from "../api/products";
+import { fetchCustomers } from "../api/customers";
 
 function formatDate(dateString) {
   if (!dateString) return "—";
@@ -35,6 +36,7 @@ function isRush(project) {
 }
 
 /** New Project Modal */
+/** New Project Modal */
 function NewProjectModal({ open, onClose, onCreated }) {
   const [name, setName] = useState("");
   const [templateId, setTemplateId] = useState("");
@@ -51,11 +53,19 @@ function NewProjectModal({ open, onClose, onCreated }) {
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // Load product templates when modal opens
+  const [customers, setCustomers] = useState([]);
+  const [customerId, setCustomerId] = useState("");
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [customerDropdownOpen, setCustomerDropdownOpen] = useState(false);
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
+  const [customersError, setCustomersError] = useState(null);
+
+  // Load product templates + customers when modal opens
   useEffect(() => {
     if (!open) return;
 
     let cancelled = false;
+
     async function loadTemplates() {
       setLoadingTemplates(true);
       setTemplatesError(null);
@@ -77,7 +87,30 @@ function NewProjectModal({ open, onClose, onCreated }) {
       }
     }
 
+    async function loadCustomers() {
+      setLoadingCustomers(true);
+      setCustomersError(null);
+      try {
+        const data = await fetchCustomers();
+        const items = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.results)
+          ? data.results
+          : [];
+        if (!cancelled) setCustomers(items);
+      } catch (err) {
+        console.error("fetchCustomers error:", err);
+        if (!cancelled) {
+          setCustomersError("Failed to load customers.");
+        }
+      } finally {
+        if (!cancelled) setLoadingCustomers(false);
+      }
+    }
+
     loadTemplates();
+    loadCustomers();
+
     return () => {
       cancelled = true;
     };
@@ -95,6 +128,11 @@ function NewProjectModal({ open, onClose, onCreated }) {
       setError(null);
       setFieldErrors({});
       setTemplatesError(null);
+
+      setCustomerId("");
+      setCustomerSearch("");
+      setCustomerDropdownOpen(false);
+      setCustomersError(null);
     }
   }, [open]);
 
@@ -131,6 +169,7 @@ function NewProjectModal({ open, onClose, onCreated }) {
         due_date: dueDate || null,
         expected_price: expectedPrice ? parseFloat(expectedPrice) : null,
         notes: notes || "",
+        customer: customerId ? Number(customerId) : null,
       };
 
       const created = await createProject(payload);
@@ -155,6 +194,39 @@ function NewProjectModal({ open, onClose, onCreated }) {
 
   const selectedTemplate =
     templates.find((t) => t.id === Number(templateId)) || null;
+
+  // Filter customers for dropdown
+  const customerTerm = customerSearch.trim().toLowerCase();
+  const filteredCustomers = customerTerm
+    ? customers.filter((c) => {
+        const haystack = [c.name, c.email, c.channel]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(customerTerm);
+      })
+    : customers;
+
+  const limitedCustomers = filteredCustomers.slice(0, 50);
+
+  function handleCustomerInputChange(e) {
+    const value = e.target.value;
+    setCustomerSearch(value);
+    // Once user starts typing, clear the selected id so they pick again
+    setCustomerId("");
+    setCustomerDropdownOpen(true);
+  }
+
+  function handleCustomerSelect(c) {
+    const label =
+      c.name ||
+      c.email ||
+      (c.channel ? `Customer #${c.id} (${c.channel})` : `Customer #${c.id}`);
+
+    setCustomerId(c.id);
+    setCustomerSearch(label);
+    setCustomerDropdownOpen(false);
+  }
 
   return (
     <div
@@ -213,8 +285,8 @@ function NewProjectModal({ open, onClose, onCreated }) {
               color: "#6b7280",
             }}
           >
-            Choose a product template, then tweak quantity, name, and pricing.
-            Workflow and stage will be inferred automatically.
+            Choose a product template, then tweak quantity, name, customer, and
+            pricing. Workflow and stage will be inferred automatically.
           </p>
 
           {error && (
@@ -296,7 +368,6 @@ function NewProjectModal({ open, onClose, onCreated }) {
                 </p>
               )}
 
-              {/* Fallback manual ID input if templates fail */}
               {templatesError && (
                 <div style={{ marginTop: "0.4rem" }}>
                   <label
@@ -325,7 +396,7 @@ function NewProjectModal({ open, onClose, onCreated }) {
               )}
             </div>
 
-            {/* Optional name */}
+            {/* Project name */}
             <div>
               <label
                 style={{
@@ -361,6 +432,175 @@ function NewProjectModal({ open, onClose, onCreated }) {
                   }}
                 >
                   {errorText("name")}
+                </p>
+              )}
+            </div>
+
+            {/* Customer combobox */}
+            <div>
+              <label
+                style={{
+                  fontSize: "0.8rem",
+                  display: "block",
+                  marginBottom: 4,
+                }}
+              >
+                Customer
+              </label>
+
+              {customersError && (
+                <p
+                  style={{
+                    margin: "0 0 0.35rem",
+                    fontSize: "0.75rem",
+                    color: "#b45309",
+                  }}
+                >
+                  {customersError} You can still create a project without
+                  linking a customer.
+                </p>
+              )}
+
+              <div style={{ position: "relative" }}>
+                <input
+                  type="text"
+                  value={customerSearch}
+                  onChange={handleCustomerInputChange}
+                  onFocus={() => setCustomerDropdownOpen(true)}
+                  placeholder={
+                    loadingCustomers && customers.length === 0
+                      ? "Loading customers…"
+                      : "Select a customer (optional)"
+                  }
+                  style={{
+                    width: "100%",
+                    borderRadius: "6px",
+                    border: "1px solid #d1d5db",
+                    padding: "0.4rem 2rem 0.4rem 0.6rem",
+                    fontSize: "0.9rem",
+                    background: customers.length ? "#ffffff" : "#f9fafb",
+                    color:
+                      customers.length || customerSearch
+                        ? "#111827"
+                        : "#9ca3af",
+                  }}
+                  disabled={loadingCustomers && customers.length === 0}
+                />
+                {/* Little dropdown arrow, purely visual */}
+                <span
+                  style={{
+                    position: "absolute",
+                    right: "0.5rem",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    fontSize: "0.8rem",
+                    color: "#6b7280",
+                    pointerEvents: "none",
+                  }}
+                >
+                  ▾
+                </span>
+
+                {customerDropdownOpen &&
+                  customers.length > 0 &&
+                  limitedCustomers.length > 0 && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        zIndex: 10,
+                        marginTop: "0.2rem",
+                        left: 0,
+                        right: 0,
+                        maxHeight: "220px",
+                        overflowY: "auto",
+                        background: "#ffffff",
+                        borderRadius: "0.5rem",
+                        boxShadow:
+                          "0 10px 15px -3px rgba(15,23,42,0.1), 0 4px 6px -4px rgba(15,23,42,0.1)",
+                        border: "1px solid #e5e7eb",
+                      }}
+                    >
+                      {limitedCustomers.map((c) => {
+                        const label =
+                          c.name ||
+                          c.email ||
+                          (c.channel
+                            ? `Customer #${c.id} (${c.channel})`
+                            : `Customer #${c.id}`);
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => handleCustomerSelect(c)}
+                            style={{
+                              width: "100%",
+                              textAlign: "left",
+                              padding: "0.4rem 0.6rem",
+                              border: "none",
+                              background: "transparent",
+                              fontSize: "0.85rem",
+                              cursor: "pointer",
+                            }}
+                            onMouseDown={(e) => e.preventDefault()}
+                          >
+                            <div style={{ fontWeight: 500 }}>{label}</div>
+                            {(c.email || c.channel) && (
+                              <div
+                                style={{
+                                  fontSize: "0.75rem",
+                                  color: "#6b7280",
+                                }}
+                              >
+                                {c.email}
+                                {c.email && c.channel ? " · " : ""}
+                                {c.channel}
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                      {filteredCustomers.length > limitedCustomers.length && (
+                        <div
+                          style={{
+                            padding: "0.35rem 0.6rem",
+                            fontSize: "0.75rem",
+                            color: "#6b7280",
+                            borderTop: "1px solid #e5e7eb",
+                            background: "#f9fafb",
+                          }}
+                        >
+                          …and {filteredCustomers.length - limitedCustomers.length}{" "}
+                          more. Refine search.
+                        </div>
+                      )}
+                    </div>
+                  )}
+              </div>
+
+              {customers.length === 0 &&
+                !loadingCustomers &&
+                !customersError && (
+                  <p
+                    style={{
+                      margin: "0.25rem 0 0",
+                      fontSize: "0.75rem",
+                      color: "#6b7280",
+                    }}
+                  >
+                    No customers yet. You can add them from the Customers page
+                    later.
+                  </p>
+                )}
+
+              {errorText("customer") && (
+                <p
+                  style={{
+                    margin: "0.15rem 0 0",
+                    fontSize: "0.75rem",
+                    color: "#b91c1c",
+                  }}
+                >
+                  {errorText("customer")}
                 </p>
               )}
             </div>
@@ -439,7 +679,7 @@ function NewProjectModal({ open, onClose, onCreated }) {
               </div>
             </div>
 
-            {/* Expected price with hint */}
+            {/* Expected price */}
             <div>
               <label
                 style={{
@@ -582,6 +822,7 @@ function NewProjectModal({ open, onClose, onCreated }) {
     </div>
   );
 }
+
 
 /** Cancel Project Modal */
 function CancelProjectModal({ project, onClose, onUpdated }) {
@@ -1663,7 +1904,14 @@ export default function Projects() {
                     {p.template_name || "—"}
                   </td>
                   <td style={{ padding: "0.6rem 0.75rem" }}>
-                    {p.customer_name || "—"}
+                    {p.customer_name ? (
+  <Link to={`/customers/${p.customer}`}>
+    {p.customer_name}
+  </Link>
+) : (
+  "—"
+)}
+
                   </td>
                   <td style={{ padding: "0.6rem 0.75rem" }}>
                     {p.workflow_name || "—"}

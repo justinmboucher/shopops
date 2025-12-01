@@ -10,6 +10,14 @@ class ShopAdmin(admin.ModelAdmin):
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ("name", "shop", "email", "channel", "is_active")
-    search_fields = ("name", "email", "channel")
-    list_filter = ("shop", "is_active")
+    list_display = (
+        "name",
+        "email",
+        "phone",
+        "shop",
+        "is_vip",
+        "is_active",
+        "created_at",
+    )
+    list_filter = ("shop", "is_active", "is_vip", "channel")
+    search_fields = ("name", "email", "phone", "address_line1", "city")

@@ -45,8 +45,61 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save()
 
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post"], url_path="move")
     def move(self, request, pk=None):
+        """
+        Move a project to a new workflow stage.
+
+        The stage may belong to a different workflow; in that case, the
+        project's workflow is updated to match the stage's workflow.
+        """
+        project = self.get_object()
+        stage_id = request.data.get("stage_id")
+
+        if not stage_id:
+            return Response(
+                {"stage_id": ["This field is required."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            stage_id_int = int(stage_id)
+        except (TypeError, ValueError):
+            return Response(
+                {"stage_id": ["Must be a valid integer."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            # Look up by id only
+            stage = WorkflowStage.objects.select_related("workflow", "workflow__shop").get(
+                id=stage_id_int
+            )
+        except WorkflowStage.DoesNotExist:
+            return Response(
+                {"detail": "Target stage does not exist."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Safety: make sure stage belongs to the same shop
+        if stage.workflow.shop_id != project.shop_id:
+            return Response(
+                {"detail": "Target stage belongs to a different shop."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 🔑 Key part: allow switching workflows
+        project.workflow = stage.workflow
+        project.current_stage = stage
+
+        # If you later add “status per stage” logic, you can update status here.
+        # For now we leave project.status alone.
+
+        project.save()
+
+        serializer = self.get_serializer(project)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
         """
         Move a project to a new stage within its workflow.
 

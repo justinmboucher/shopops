@@ -67,7 +67,12 @@ function AppLayout({ children }) {
             >
               Dashboard
             </Link>
-
+            <Link 
+              to="/customers" 
+              style={navLinkStyle(pathname === "/customers")}
+            >
+              Customers
+            </Link>
             <Link
               to="/settings"
               style={navLinkStyle(pathname.startsWith("/settings"))}
@@ -79,7 +84,14 @@ function AppLayout({ children }) {
               to="/projects"
               style={navLinkStyle(pathname.startsWith("/projects"))}
             >
-              Projects
+              Projects Table
+            </Link>
+            
+            <Link
+              to="/projects/board"
+              style={navLinkStyle(pathname.startsWith("/projects/board"))}
+            >
+              Projects Board
             </Link>
 
             <Link
