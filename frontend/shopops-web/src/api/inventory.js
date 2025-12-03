@@ -97,3 +97,20 @@ export async function deleteEquipmentItem(id) {
   const response = await client.delete(`inventory/equipment/${id}/`);
   return response.data;
 }
+
+// ----- Aggregated inventory (for dashboard, etc.) -----
+
+export async function fetchInventory(params = {}) {
+  // You can pass search/pagination params and they'll be reused
+  const [materials, consumables, equipment] = await Promise.all([
+    fetchMaterials(params),
+    fetchConsumables(params),
+    fetchEquipment(params),
+  ]);
+
+  return [
+    ...materials.map((m) => ({ ...m, inventoryType: "material" })),
+    ...consumables.map((c) => ({ ...c, inventoryType: "consumable" })),
+    ...equipment.map((e) => ({ ...e, inventoryType: "equipment" })),
+  ];
+}
