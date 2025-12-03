@@ -1,0 +1,468 @@
+/* ==========================================================================
+   ShopOps Global Styles & Layout
+   ========================================================================== */
+
+/* Reset-ish basics -------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--color-bg-app);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Links */
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none;
+}
+.page-header {
+  margin-bottom: 0.75rem;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 500;
+}
+
+.page-subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+/* Table page layout ------------------------------------------------------- */
+
+/* ===========================================================
+   TABLES — Shared across Dashboard, Customers, Inventory, etc.
+   =========================================================== */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+}
+
+/* Header */
+.table thead th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer; /* enable sorting */
+  user-select: none;
+}
+
+/* Body rows */
+.table tbody td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--panel-bg);
+}
+
+/* Zebra striping */
+.table tbody tr:nth-child(odd) td {
+  background: var(--panel-bg-alt);
+}
+
+/* Hover */
+.table tbody tr:hover td {
+  background: var(--panel-hover);
+}
+
+/* Empty state row */
+.table-empty-row {
+  text-align: center;
+  padding: 1rem;
+  color: var(--color-text-secondary);
+}
+
+/* Dark mode overrides */
+.dark .table thead th,
+.dark .table tbody td {
+  background: var(--panel-bg-dark);
+  border-color: var(--border-color-dark);
+}
+
+.dark .table tbody tr:nth-child(odd) td {
+  background: var(--panel-bg-dark-alt);
+}
+
+.dark .table tbody tr:hover td {
+  background: var(--panel-hover-dark);
+}
+
+/* Sorting arrows */
+.table-sortable {
+  cursor: pointer;
+  position: relative;
+}
+
+.table-sortable::after {
+  content: "▲▼";
+  font-size: 0.6rem;
+  opacity: 0.4;
+  margin-left: 0.35rem;
+}
+
+.table-sortable.sorted-asc::after {
+  content: "▲";
+  opacity: 1;
+}
+
+.table-sortable.sorted-desc::after {
+  content: "▼";
+  opacity: 1;
+}
+
+.table-page {
+  width: 100%;
+}
+
+.table-card {
+  margin-top: 1rem;
+  background: var(--color-bg-surface);
+  border-radius: 10px;
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  padding: 0.75rem 0.75rem 0.5rem;
+}
+
+.table-card__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.table-card__search {
+  flex: 1;
+  max-width: 360px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  background: #020617;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.table-card__search input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.table-card__search input::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.table-card__toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Inventory-specific layout helpers -------------------------------------- */
+
+.inventory-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.inventory-add-btn {
+  white-space: nowrap;
+}
+
+.settings-card--table {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Tables ------------------------------------------------------------------ */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table thead {
+  background: #020617;
+}
+
+.table th {
+  text-align: left;
+  font-weight: 500;
+  font-size: 0.8rem;
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.9);
+  color: var(--color-text-primary);
+}
+
+.table-striped tbody tr:nth-child(odd) {
+  background-color: rgba(15, 23, 42, 0.9);
+}
+
+.table-striped tbody tr:nth-child(even) {
+  background-color: rgba(15, 23, 42, 0.75);
+}
+
+.table tbody tr:hover {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+.table-empty-row {
+  text-align: center;
+  padding: 1.2rem 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+/* Forms ------------------------------------------------------------------- */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 0.75rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.form-field--full {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.form-input {
+  border-radius: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: #020617;
+  color: var(--color-text-primary);
+  padding: 0.4rem 0.5rem;
+  font-size: 0.9rem;
+}
+
+.form-input::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.form-input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+  border-color: var(--color-primary);
+}
+
+.form-textarea {
+  resize: vertical;
+}
+
+/* Keep existing .btn.btn-secondary variant for old markup */
+.btn.btn-secondary {
+  background-color: #1f2937;
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+.btn.btn-secondary:hover {
+  background-color: #111827;
+  border-color: rgba(148, 163, 184, 0.7);
+}
+
+/* Modals ------------------------------------------------------------------ */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 14, 16, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 80;
+}
+
+.modal-dialog {
+  background: #111827;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: 0 22px 45px rgba(0, 0, 0, 0.6);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.modal-close {
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 1.35rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: var(--color-text-primary);
+}
+
+.modal-body {
+  padding: 0.75rem 1rem 0.5rem;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  padding: 0.6rem 1rem 0.75rem;
+  border-top: 1px solid var(--color-border-subtle);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.modal-footer-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+/* === Dashboard / App tables ======================================= */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+/* Header cells – override any old dark theme */
+.settings-card--table .table thead th,
+.dashboard .table thead th {
+  background-color: var(--color-bg-muted) !important; /* light & dark via tokens */
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+/* Don't let rogue thead backgrounds through */
+.settings-card--table .table thead,
+.dashboard .table thead {
+  background: transparent !important;
+}
+
+/* Body cells */
+.settings-card--table .table tbody td,
+.dashboard .table tbody td {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+/* Striped rows (table-striped) */
+.settings-card--table .table.table-striped tbody tr:nth-child(odd),
+.dashboard .table.table-striped tbody tr:nth-child(odd) {
+  background-color: var(--color-bg-surface);
+}
+
+.settings-card--table .table.table-striped tbody tr:nth-child(even),
+.dashboard .table.table-striped tbody tr:nth-child(even) {
+  background-color: var(--color-bg-muted); /* just a hair lighter than surface in light mode */
+}
+
+/* Dark mode tweaks (tokens already swap colors, this just softens hover) */
+[data-theme="dark"] .settings-card--table .table tbody tr:hover,
+[data-theme="dark"] .dashboard .table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="light"] .settings-card--table .table tbody tr:hover,
+[data-theme="light"] .dashboard .table tbody tr:hover {
+  background-color: rgba(148, 163, 184, 0.16);
+}
+
+/* Empty state row */
+.table-empty-row {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+/* Sortable headers */
+.table-sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.table-sortable::after {
+  content: " ▾▴";
+  font-size: 0.6rem;
+  opacity: 0.4;
+  margin-left: 0.2rem;
+}
+
+.table-sortable.sorted-asc::after {
+  content: " ▴";
+  opacity: 1;
+}
+
+.table-sortable.sorted-desc::after {
+  content: " ▾";
+  opacity: 1;
+}

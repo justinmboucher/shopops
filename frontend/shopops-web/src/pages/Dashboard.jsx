@@ -4,6 +4,30 @@ import { fetchDashboardSummary } from "../api/dashboard";
 import BaseChart from "../components/charts/BaseChart";
 import MetricCard from "../components/dashboard/MetricCard";
 import ChartCard from "../components/dashboard/ChartCard";
+import useTableSort from "../hooks/useTableSort";
+import useTablePagination from "../hooks/useTablePagination";
+import TablePagination from "../components/common/TablePagination";
+
+function formatAxisNumber(val) {
+  if (val >= 1_000_000) return (val / 1_000_000).toFixed(1) + "M";
+  if (val >= 1_000) return (val / 1_000).toFixed(0) + "K";
+  return val.toString();
+}
+
+function formatMonthLabel(raw) {
+  // Accept "2025-02", "2025-02-01", or just "02"
+  const parts = raw.split("-");
+  const month = parseInt(parts[1], 10);
+
+  const names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  if (!Number.isFinite(month) || month < 1 || month > 12) {
+    return raw; // fallback
+  }
+
+  return names[month - 1];
+}
 
 function formatMoney(amount) {
   if (amount == null || Number.isNaN(Number(amount))) return "—";
@@ -131,8 +155,6 @@ export default function Dashboard() {
     setFullscreenCardId((current) => (current === id ? null : id));
   };
 
-  const isFullscreen = (id) => fullscreenCardId === id;
-
   const totals = summary?.totals ?? {};
   const trends = summary?.trends ?? {};
 
@@ -164,6 +186,57 @@ export default function Dashboard() {
     ? summary.recentActivity
     : [];
 
+  const {
+    sortedRows: sortedTopProducts,
+    sortConfig: sortTopProducts,
+    onSort: onSortTopProducts,
+  } = useTableSort(topProducts);
+
+  const {
+    sortedRows: sortedLowInventory,
+    sortConfig: sortLowInventory,
+    onSort: onSortLowInventory,
+  } = useTableSort(lowInventory);
+
+  const {
+    sortedRows: sortedActivity,
+    sortConfig: sortActivity,
+    onSort: onSortActivity,
+  } = useTableSort(recentActivity);
+
+// pagination hooks (10 per page)
+const {
+  pagedRows: pagedTopProducts,
+  page: pageTopProducts,
+  pageCount: pageCountTopProducts,
+  nextPage: nextTopProducts,
+  prevPage: prevTopProducts,
+} = useTablePagination(sortedTopProducts, 10);
+
+const {
+  pagedRows: pagedLowInventory,
+  page: pageLowInventory,
+  pageCount: pageCountLowInventory,
+  nextPage: nextLowInventory,
+  prevPage: prevLowInventory,
+} = useTablePagination(sortedLowInventory, 10);
+
+const {
+  pagedRows: pagedActivity,
+  page: pageActivity,
+  pageCount: pageCountActivity,
+  nextPage: nextActivity,
+  prevPage: prevActivity,
+} = useTablePagination(sortedActivity, 10);
+
+
+
+  // ----- Fullscreen helpers (must be here, not below or above JSX) -----
+
+const isFullscreen = (id) => fullscreenCardId === id;
+const isAnyFullscreen = Boolean(fullscreenCardId);
+const shouldHideNonFullscreen = (id) =>
+  isAnyFullscreen && fullscreenCardId !== id;
   // Loading / error states
   if (loading) {
     return (
@@ -326,12 +399,6 @@ export default function Dashboard() {
     0
   );
 
-  const isAnyFullscreen = Boolean(fullscreenCardId);
-  const shouldHideNonFullscreen = (id) =>
-    isAnyFullscreen && fullscreenCardId !== id;
-
-
-
   return (
     <div className="app-main">
       <div className="dashboard">
@@ -341,7 +408,7 @@ export default function Dashboard() {
         </div>
 
         {/* Row 1 – Metric cards */}
-        <div className="dashboard-metrics">
+        <div className="dashboard-grid-row dashboard-grid-row--metrics">
           {metricCards.map((card) =>
             shouldHideNonFullscreen(card.id) ? null : (
                <MetricCard
@@ -592,8 +659,30 @@ export default function Dashboard() {
                     ]}
                     options={{
                       chart: { foreColor: "var(--color-text-secondary)" },
+                      dataLabels: {
+                        enabled: false,
+                      },
+                      plotOptions: {
+                        bar: {
+                          horizontal: false,
+                          borderRadius: 15,
+                          borderRadiusApplication: 'end'
+                        },
+                      },
                       xaxis: {
-                        categories: salesMonths,
+                        categories: salesMonths.map(formatMonthLabel),
+                      },
+
+                      yaxis: {
+                        labels: {
+                          formatter: (value) => formatAxisNumber(value),
+                        },
+                      },
+
+                      tooltip: {
+                        y: {
+                          formatter: (value) => formatMoney(value),
+                        },
                       },
                     }}
                     height={isFullscreen("salesByMonth") ? 420 : 320}
@@ -639,9 +728,23 @@ export default function Dashboard() {
                     ]}
                     options={{
                       chart: { foreColor: "var(--color-text-secondary)" },
+
                       xaxis: {
-                        categories: revExpMonths,
+                        categories: revExpMonths.map(formatMonthLabel),
                       },
+
+                      yaxis: {
+                        labels: {
+                          formatter: (value) => formatAxisNumber(value),
+                        },
+                      },
+
+                      tooltip: {
+                        y: {
+                          formatter: (value) => formatMoney(value),
+                        },
+                      },
+
                       stroke: {
                         curve: "smooth",
                         width: 2,
@@ -692,27 +795,51 @@ export default function Dashboard() {
                   handleToggleFullscreen("topProducts")
                 }
               >
-                <div className="settings-card--table">
+               <div className="settings-card--table">
                   <table className="table table-striped">
                     <thead>
                       <tr>
-                        <th>Product</th>
-                        <th>Units</th>
-                        <th>Revenue</th>
+                        <th
+                          className={`table-sortable ${
+                            sortTopProducts.column === "productName"
+                              ? `sorted-${sortTopProducts.direction}`
+                              : ""
+                          }`}
+                          onClick={() => onSortTopProducts("productName")}
+                        >
+                          Product
+                        </th>
+                        <th
+                          className={`table-sortable ${
+                            sortTopProducts.column === "unitsSold"
+                              ? `sorted-${sortTopProducts.direction}`
+                              : ""
+                          }`}
+                          onClick={() => onSortTopProducts("unitsSold")}
+                        >
+                          Units
+                        </th>
+                        <th
+                          className={`table-sortable ${
+                            sortTopProducts.column === "revenue"
+                              ? `sorted-${sortTopProducts.direction}`
+                              : ""
+                          }`}
+                          onClick={() => onSortTopProducts("revenue")}
+                        >
+                          Revenue
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {topProducts.length === 0 ? (
+                      {pagedTopProducts.length === 0 ? (
                         <tr>
-                          <td
-                            colSpan={3}
-                            className="table-empty-row"
-                          >
+                          <td colSpan={3} className="table-empty-row">
                             No products in the last 30 days.
                           </td>
                         </tr>
                       ) : (
-                        topProducts.map((p, idx) => (
+                        pagedTopProducts.map((p, idx) => (
                           <tr key={`${p.productName}-${idx}`}>
                             <td>{p.productName}</td>
                             <td>{p.unitsSold ?? "—"}</td>
@@ -722,6 +849,13 @@ export default function Dashboard() {
                       )}
                     </tbody>
                   </table>
+
+                  <TablePagination
+                    page={pageTopProducts}
+                    pageCount={pageCountTopProducts}
+                    onPrev={prevTopProducts}
+                    onNext={nextTopProducts}
+                  />
                 </div>
               </ChartCard>
             )}
@@ -740,24 +874,57 @@ export default function Dashboard() {
                   <table className="table table-striped">
                     <thead>
                       <tr>
-                        <th>Item</th>
-                        <th>Category</th>
-                        <th>Qty</th>
-                        <th>Threshold</th>
+                        <th
+                          className={`table-sortable ${
+                            sortLowInventory.column === "itemName"
+                              ? `sorted-${sortLowInventory.direction}`
+                              : ""
+                          }`}
+                          onClick={() => onSortLowInventory("itemName")}
+                        >
+                          Item
+                        </th>
+                        <th
+                          className={`table-sortable ${
+                            sortLowInventory.column === "category"
+                              ? `sorted-${sortLowInventory.direction}`
+                              : ""
+                          }`}
+                          onClick={() => onSortLowInventory("category")}
+                        >
+                          Category
+                        </th>
+                        <th
+                          className={`table-sortable ${
+                            sortLowInventory.column === "quantity"
+                              ? `sorted-${sortLowInventory.direction}`
+                              : ""
+                          }`}
+                          onClick={() => onSortLowInventory("quantity")}
+                        >
+                          Qty
+                        </th>
+                        <th
+                          className={`table-sortable ${
+                            sortLowInventory.column === "threshold"
+                              ? `sorted-${sortLowInventory.direction}`
+                              : ""
+                          }`}
+                          onClick={() => onSortLowInventory("threshold")}
+                        >
+                          Threshold
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {lowInventory.length === 0 ? (
+                      {pagedLowInventory.length === 0 ? (
                         <tr>
-                          <td
-                            colSpan={4}
-                            className="table-empty-row"
-                          >
+                          <td colSpan={4} className="table-empty-row">
                             No items are currently below their threshold.
                           </td>
                         </tr>
                       ) : (
-                        lowInventory.map((item, idx) => (
+                        pagedLowInventory.map((item, idx) => (
                           <tr key={`${item.itemName}-${idx}`}>
                             <td>{item.itemName}</td>
                             <td>{item.category}</td>
@@ -768,6 +935,13 @@ export default function Dashboard() {
                       )}
                     </tbody>
                   </table>
+
+                  <TablePagination
+                    page={pageLowInventory}
+                    pageCount={pageCountLowInventory}
+                    onPrev={prevLowInventory}
+                    onNext={nextLowInventory}
+                  />
                 </div>
               </ChartCard>
             )}
@@ -790,37 +964,57 @@ export default function Dashboard() {
                 No recent activity yet.
               </p>
             ) : (
-              <ul
-                style={{
-                  listStyle: "none",
-                  margin: 0,
-                  padding: 0,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.4rem",
-                }}
-              >
-                {recentActivity.map((event) => (
-                  <li
-                    key={event.id}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: "0.9rem",
-                    }}
-                  >
-                    <span>{event.message}</span>
-                    <span
-                      style={{
-                        color: "var(--steel-300)",
-                        fontSize: "0.8rem",
-                      }}
-                    >
-                      {new Date(event.timestamp).toLocaleString()}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <div className="settings-card--table">
+                <table className="table table-striped">
+                  <thead>
+                    <tr>
+                      <th
+                        className={`table-sortable ${
+                          sortActivity.column === "message"
+                            ? `sorted-${sortActivity.direction}`
+                            : ""
+                        }`}
+                        onClick={() => onSortActivity("message")}
+                      >
+                        Activity
+                      </th>
+                      <th
+                        className={`table-sortable ${
+                          sortActivity.column === "timestamp"
+                            ? `sorted-${sortActivity.direction}`
+                            : ""
+                        }`}
+                        onClick={() => onSortActivity("timestamp")}
+                      >
+                        Timestamp
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pagedActivity.length === 0 ? (
+                      <tr>
+                        <td colSpan={2} className="table-empty-row">
+                          No recent activity.
+                        </td>
+                      </tr>
+                    ) : (
+                      pagedActivity.map((event) => (
+                        <tr key={event.id}>
+                          <td>{event.message}</td>
+                          <td>{new Date(event.timestamp).toLocaleString()}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+
+                <TablePagination
+                  page={pageActivity}
+                  pageCount={pageCountActivity}
+                  onPrev={prevActivity}
+                  onNext={nextActivity}
+                />
+              </div>
             )}
           </ChartCard>
         )}

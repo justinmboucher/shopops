@@ -1,0 +1,389 @@
+.dashboard {
+  width: 100%;
+  max-width: none;      /* fill all available space */
+  margin: 0;            /* no centering */
+  padding: 1.25rem 1.75rem 1.75rem; /* breathing room from edges */
+}
+.dashboard-dropdown-menu button:hover {
+  background-color: var(--steel-700);
+}
+
+/* Dashboard layout -------------------------------------------------------- */
+
+/* Generic dashboard rows -------------------------------------------------- */
+
+.dashboard-grid-row {
+  display: grid;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+/* Default layouts per row type */
+
+.dashboard-grid-row--metrics {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.dashboard-grid-row--2-1 {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+
+.dashboard-grid-row--1-1 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* When ANY card is fullscreen, every row becomes single-column */
+.dashboard--fullscreen-active .dashboard-grid-row {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Dashboard action menu --------------------------------------------------- */
+
+.dashboard-menu {
+  position: relative;
+}
+
+.dashboard-menu-trigger {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.dashboard-menu-trigger:hover {
+  background: rgba(148, 163, 184, 0.16);
+  color: var(--color-text-primary);
+}
+
+.dashboard-menu-panel {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  min-width: 180px;
+  padding: 0.35rem 0;
+  border-radius: 12px;
+  background: var(--color-bg-surface);        /* matches panel */
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.22);
+  z-index: 40;
+}
+
+.dashboard-menu-item {
+  width: 100%;
+  padding: 0.4rem 0.9rem;
+  text-align: left;
+  font-size: 0.85rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.dashboard-menu-item:hover {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)); /* 5 cards on desktop */
+  gap: 1rem;
+  margin: 0.75rem 0 1.25rem;
+}
+
+.chart-card--fullscreen {
+  min-height: 460px;
+}
+
+/* Chart KPI summary rows -------------------------------------------------- */
+
+/* Centered KPI footer under charts ---------------------------------------- */
+
+.chart-kpi-grid {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: center;      /* center footer */
+  gap: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.chart-kpi-item {
+  position: relative;
+  min-width: 140px;
+  padding-left: 0.9rem;         /* room for the color bar */
+  text-align: left;
+}
+
+/* color bar that spans header + value */
+.chart-kpi-colorbar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 999px;
+  background: #64748b;          /* default, overridden inline */
+}
+
+.chart-kpi-label {
+  font-size: 0.8rem;
+  font-weight: 600;             /* bold header */
+  color: var(--color-text-secondary);
+}
+
+.chart-kpi-value {
+  margin-top: 0.1rem;
+  font-size: 1rem;
+  font-weight: 700;             /* bold value */
+  color: var(--color-text-primary);
+}
+
+/* bigger radial when fullscreen */
+.metric-card--fullscreen .metric-radial {
+  width: 200px;
+  height: 200px;
+}
+
+/* Chart / table cards (rows 2–4) */
+.panel {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 10px;
+  padding: 0.75rem 1rem 1rem;
+}
+
+/* Adminto-style shadows */
+:root[data-theme="light"] .metric-card,
+:root[data-theme="light"] .panel {
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+:root[data-theme="dark"] .metric-card,
+:root[data-theme="dark"] .panel {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* Metric typography */
+.metric-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.metric-subtext {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.metric-value {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.metric-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Panel headers for charts/tables */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.panel-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.panel-subtitle {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+/* Dashboard responsiveness ----------------------------------------------- */
+
+@media (max-width: 1279px) {
+  .dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 per row on tablet */
+  }
+}
+
+@media (max-width: 767px) {
+  .dashboard-metrics {
+    grid-template-columns: minmax(0, 1fr); /* 1 per row on mobile */
+  }
+}
+
+
+/* Metric card layout tweaks ---------------------------------------------- */
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.metric-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.metric-label--lg {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.metric-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Radial variant */
+.metric-card-body--radial {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.metric-radial {
+  width: 7rem;
+  height: 7rem;
+  flex-shrink: 0;
+}
+
+.metric-main--right {
+  text-align: right;
+}
+
+.metric-value--xl {
+  font-size: 1.7rem;
+  font-weight: 700;   /* was 600 */
+}
+
+.metric-timeframe {
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+/* Trend variant */
+.metric-card-body--trend {
+  gap: 0.6rem;
+}
+
+.metric-trend-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.metric-trend-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+/* Trend pill */
+.metric-trend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.9rem;   /* more padding -> bigger chip */
+  border-radius: 999px;
+  font-size: 1.1rem;         /* ~50% bigger than 0.75 */
+  font-weight: 700;   
+}
+
+.metric-trend-pill-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.metric-trend-pill-arrow {
+  font-size: 0.9em;
+}
+
+.metric-trend-pill--good {
+  background-color: #16a34a;  /* emerald-600 style */
+  color: #ffffff;
+}
+
+.metric-trend-pill--bad {
+  background-color: #dc2626;  /* red-600 */
+  color: #ffffff;
+}
+
+.metric-trend-pill--neutral {
+  background-color: #6b7280;  /* gray-500 */
+  color: #ffffff;
+}
+
+/* Progress bar under trend card */
+.metric-progress {
+  margin-top: 0.1rem;
+}
+
+.metric-progress-bar {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  overflow: hidden;
+}
+
+.metric-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #9ca3af;
+  transition: width 200ms ease-out;
+}
+
+.metric-progress-fill--good {
+  background: #22c55e;
+}
+
+.metric-progress-fill--bad {
+  background: #ef4444;
+}
+
+.table-pagination {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.table-pagination-btn {
+  padding: 0.25rem 0.6rem;
+}
+
+.table-pagination-info {
+  color: var(--color-text-secondary);
+}
