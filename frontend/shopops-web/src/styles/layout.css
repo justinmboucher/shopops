@@ -276,8 +276,8 @@
 
 .topbar__title {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 500;
+  font-size: 2rem;
+  font-weight: bold;
 }
 
 .topbar__spacer {
@@ -387,12 +387,14 @@
   justify-content: center;
   font-size: 0.8rem;
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .topbar__user-name {
   font-size: 0.9rem;
   font-weight: 600;                 /* NEW */
   color: var(--color-text-primary); /* matches Adminto */
+  white-space: nowrap;
 }
 
 .topbar__user-caret {
@@ -467,4 +469,218 @@
 .topbar__user-menu-divider {
   margin: 0.25rem 0;
   border-top: 1px solid rgba(15, 23, 42, 0.9);
+}
+
+/* Container for search input + dropdown */
+/* --- Search container & dropdown --- */
+
+.topbar__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 360px;
+  width: 100%;
+}
+
+.topbar__search-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.4rem 0.6rem 0.4rem 1.6rem;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.85rem;
+  color: inherit;
+}
+
+.topbar__search-input::placeholder {
+  opacity: 0.6;
+}
+
+.topbar__search-icon {
+  position: absolute;
+  left: 6px;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* dropdown */
+
+.topbar__search-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  background: var(--color-bg-surface, #2b3a55);
+  color: var(--color-text-secondary, #ffffff);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  z-index: 40;
+  padding: 0.25rem 0;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  width: 110%;          /* ~10% wider than the input */
+  left: -5%;            /* center it under the input */
+  box-sizing: border-box;
+  transition:
+    opacity 0.12s ease-out,
+    transform 0.12s ease-out;
+}
+
+.topbar__search-dropdown--open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* sections */
+
+.topbar__search-section-header {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  /*letter-spacing: 0.08em; */
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+.topbar__search-section-divider {
+  margin: 0.25rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* items */
+.topbar__search-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0.5rem 0.9rem;
+  display: grid;
+  grid-template-columns: auto 1fr;  /* pill | text */
+  column-gap: 0.6rem;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  box-sizing: border-box;
+}
+
+.topbar__search-item-icon {
+  display: none; /* pill now carries the icon; hide separate icon column */
+}
+
+.topbar__search-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+  min-width: 0; /* allows ellipsis to work */
+}
+
+.topbar__search-item-label,
+.topbar__search-item-subtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* active row (hover or keyboard) */
+
+.topbar__search-item:hover,
+.topbar__search-item--active {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* pill: base & per-type colors; text stays white */
+
+.topbar__search-item-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.topbar__search-item-type svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  stroke-width: 2;
+}
+
+.topbar__search-item-type .pill-text {
+  line-height: 1;
+}
+
+/* tweak colors to taste or convert to theme tokens */
+.topbar__search-item-type--customer {
+  background-color: #3b82f6; /* blue */
+}
+.topbar__search-item-type--project {
+  background-color: #8b5cf6; /* purple */
+}
+.topbar__search-item-type--material {
+  background-color: #10b981; /* emerald */
+}
+.topbar__search-item-type--consumable {
+  background-color: #f59e0b; /* amber */
+}
+.topbar__search-item-type--equipment {
+  background-color: #ef4444; /* red */
+}
+
+/* match highlight inside label/subtitle */
+
+.topbar__search-highlight {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+/* Right side: label + subtitle stacked */
+.topbar__search-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0; /* let text wrap nicely */
+}
+
+.topbar__search-item-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.topbar__search-item-subtitle {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+/* empty state */
+
+.topbar__search-empty {
+  padding: 0.6rem 0.8rem;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.topbar__search-empty-hint {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.topbar__search-empty-hint code {
+  font-family: inherit;
+  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.05rem 0.25rem;
+  border-radius: 4px;
+  margin-left: 0.25rem;
 }

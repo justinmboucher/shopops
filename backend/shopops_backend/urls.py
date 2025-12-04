@@ -5,7 +5,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from core.views import MeView, ShopView
+from core.views import MeView, ShopView, GlobalSearchView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -14,6 +14,7 @@ urlpatterns = [
     path("api/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/auth/me/", MeView.as_view(), name="auth-me"),
     path("api/shop/", ShopView.as_view(), name="shop-detail"),
+    path("api/search/", GlobalSearchView.as_view(), name="global-search"),
 
     path("api/core/", include("core.urls")),
     path("api/workflows/", include("workflows.urls")),

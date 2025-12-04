@@ -111,3 +111,10 @@ class CustomerSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+class SearchResultSerializer(serializers.Serializer):
+    type = serializers.CharField()      # "customer", "project", "product", etc.
+    id = serializers.IntegerField()
+    label = serializers.CharField()     # main text in the UI
+    subtitle = serializers.CharField(allow_blank=True)
+    url = serializers.CharField()       # frontend route to navigate to
