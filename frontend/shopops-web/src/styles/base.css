@@ -37,19 +37,23 @@ a:hover {
   text-decoration: none;
 }
 .page-header {
-  margin-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
 }
 
-.page-title {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 500;
+.page-header-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  padding-bottom: 0.2rem;
+  border-bottom: 2px solid var(--color-primary);
+  margin-bottom: 0.25rem;
 }
 
 .page-subtitle {
-  margin: 0.15rem 0 0;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--color-text-secondary);
+  margin-top: 0.15rem;
 }
 
 /* Table page layout ------------------------------------------------------- */
@@ -248,8 +252,12 @@ a:hover {
   background-color: rgba(15, 23, 42, 0.75);
 }
 
-.table tbody tr:hover {
-  background-color: rgba(59, 130, 246, 0.2);
+.table-striped tbody tr:hover {
+  background-color: rgba(37, 99, 235, 0.05); /* light blue tint */
+}
+
+[data-theme="dark"] .table-striped tbody tr:hover {
+  background-color: rgba(37, 99, 235, 0.14);
 }
 
 .table-empty-row {
@@ -283,8 +291,8 @@ a:hover {
 
 .form-input {
   border-radius: 4px;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  background: #020617;
+  border: 1px solid var(--color-border-subtle);
+  background-color: var(--color-bg-surface);
   color: var(--color-text-primary);
   padding: 0.4rem 0.5rem;
   font-size: 0.9rem;
@@ -298,6 +306,11 @@ a:hover {
   outline: 2px solid var(--color-primary);
   outline-offset: 1px;
   border-color: var(--color-primary);
+}
+
+/* Optional: make them a bit darker only in dark mode */
+[data-theme="dark"] .form-input {
+  background-color: #020617;
 }
 
 .form-textarea {
@@ -315,7 +328,9 @@ a:hover {
   border-color: rgba(148, 163, 184, 0.7);
 }
 
-/* Modals ------------------------------------------------------------------ */
+/* =========================
+   Core modal styles
+   ========================= */
 
 .modal-backdrop {
   position: fixed;
@@ -327,60 +342,94 @@ a:hover {
   z-index: 80;
 }
 
+/* Base dialog */
+
 .modal-dialog {
-  background: #111827;
-  border-radius: 8px;
-  border: 1px solid var(--color-border-subtle);
-  box-shadow: 0 22px 45px rgba(0, 0, 0, 0.6);
   width: 100%;
-  max-width: 520px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
+  max-width: 540px;
+  background-color: var(--color-bg-surface);
+  border-radius: 16px;
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.7);
+  overflow: hidden;
 }
 
+/* Size variants */
+
+.modal-dialog--sm {
+  max-width: 420px;
+}
+
+.modal-dialog--md {
+  max-width: 540px;
+}
+
+.modal-dialog--lg {
+  max-width: 720px;
+}
+
+/* Header */
+
 .modal-header {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--color-border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background-color: var(--color-bg-surface);
+}
+
+.modal-header--primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  border-bottom-color: var(--color-primary);
 }
 
 .modal-title {
   margin: 0;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
 }
+
+/* Close button */
 
 .modal-close {
   border: none;
   background: transparent;
-  color: var(--color-text-secondary);
-  font-size: 1.35rem;
-  cursor: pointer;
+  color: inherit;
+  font-size: 1.25rem;
   line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.8;
 }
 
 .modal-close:hover {
+  opacity: 1;
+}
+
+/* Body */
+
+.modal-body {
+  padding: 1rem 1.25rem 1.25rem;
+  font-size: 0.9rem;
   color: var(--color-text-primary);
 }
 
-.modal-body {
-  padding: 0.75rem 1rem 0.5rem;
-  overflow-y: auto;
-}
+/* Footer */
 
 .modal-footer {
-  padding: 0.6rem 1rem 0.75rem;
+  padding: 0.75rem 1.25rem 1rem;
   border-top: 1px solid var(--color-border-subtle);
   display: flex;
   justify-content: flex-end;
+  gap: 0.5rem;
 }
 
-.modal-footer-actions {
-  display: flex;
-  gap: 0.5rem;
+/* Make buttons in footer visually consistent */
+
+.modal-footer .btn {
+  min-width: 90px;
 }
 /* === Dashboard / App tables ======================================= */
 
@@ -465,4 +514,56 @@ a:hover {
 .table-sortable.sorted-desc::after {
   content: " ▾";
   opacity: 1;
+}
+
+/* ==== Avatars ======================================================= */
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  overflow: hidden;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+/* Sizes */
+
+.avatar--xs {
+  width: 20px;
+  height: 20px;
+  font-size: 0.6rem;
+}
+
+.avatar--sm {
+  width: 28px;
+  height: 28px;
+  font-size: 0.75rem;
+}
+
+.avatar--md {
+  width: 34px;
+  height: 34px;
+  font-size: 0.85rem;
+}
+
+.avatar--lg {
+  width: 48px;
+  height: 48px;
+  font-size: 1rem;
+}
+
+/* Image inside avatar */
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar__initials {
+  line-height: 1;
 }

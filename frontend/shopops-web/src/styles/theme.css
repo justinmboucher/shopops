@@ -5,6 +5,24 @@
    - Layout and page-structure lives in index.css.
    ========================================================================== */
 
+a {
+  color: var(--color-primary);
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Keep primary buttons saturated in both themes */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.05);
+}
+
 /* Base tokens (theme-agnostic) */
 :root {
   /* Prefer dark color scheme by default */

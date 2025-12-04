@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
 import apiClient from "../../api/client"; // your axios instance
+import Avatar from "../common/Avatar";
 
 import {
   Search as SearchIcon,
@@ -529,9 +530,13 @@ export default function Topbar({
               className="topbar__user-trigger"
               onClick={() => setMenuOpen((open) => !open)}
             >
-              <div className="topbar__avatar" aria-hidden="true">
-                {userDisplayName.charAt(0).toUpperCase()}
-              </div>
+               <Avatar
+                  name={user?.full_name || user?.username}
+                  imageUrl={user?.avatar}
+                  idForColor={user?.id}
+                  size="sm"
+                  className="topbar__avatar"
+                />
               <span className="topbar__user-name">{userDisplayName}</span>
               <ChevronDown size={14} className="topbar__user-caret" />
             </button>

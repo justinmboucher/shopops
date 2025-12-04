@@ -1,20 +1,51 @@
 // src/components/common/Modal.jsx
 import React from "react";
 
-function Modal({ open, title, onClose, children, footer }) {
+/**
+ * Generic app modal.
+ *
+ * Props:
+ * - open: boolean
+ * - title: string | ReactNode
+ * - onClose: () => void
+ * - children: form/content
+ * - footer: ReactNode (buttons etc) – aligned right by default
+ * - size: "sm" | "md" | "lg"
+ * - variant: "default" | "primary" (primary = colored header bar)
+ */
+function Modal({
+  open,
+  title,
+  onClose,
+  children,
+  footer,
+  size = "md",
+  variant = "default",
+}) {
   if (!open) return null;
 
   const handleBackdropClick = (e) => {
-    // Only close if they click directly on the backdrop, not inside the dialog
     if (e.target === e.currentTarget) {
       onClose();
     }
   };
 
+  const dialogClassName = [
+    "modal-dialog",
+    `modal-dialog--${size}`,
+  ].join(" ");
+
+  const headerClassName = [
+    "modal-header",
+    variant === "primary" ? "modal-header--primary" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div className="modal-backdrop" onClick={handleBackdropClick}>
-      <div className="modal-dialog">
-        <header className="modal-header">
+      <div className={dialogClassName} role="dialog" aria-modal="true">
+        <header className={headerClassName}>
           <h2 className="modal-title">{title}</h2>
           <button
             type="button"
@@ -30,11 +61,7 @@ function Modal({ open, title, onClose, children, footer }) {
 
         <footer className="modal-footer">
           {footer || (
-            <button
-              type="button"
-              className="btn"
-              onClick={onClose}
-            >
+            <button type="button" className="btn" onClick={onClose}>
               Close
             </button>
           )}
