@@ -8,7 +8,7 @@ import {
   Package2,
   Wrench,
   ClipboardList,
-  Layers,
+  KanbanSquare,
   Settings as SettingsIcon,
   HelpCircle,
   ShoppingCart,
@@ -26,7 +26,7 @@ const navSections = [
     items: [
       { to: "/dashboard", label: "Dashboard", icon: <Home size={20} strokeWidth={2.2} /> },
       { to: "/customers", label: "Customers", icon: <Users size={20} strokeWidth={2.2} /> },
-      { to: "/workflows", label: "Workflows", icon: <Layers size={20} strokeWidth={2.2} /> },
+      { to: "/workflows", label: "Workflows", icon: <KanbanSquare size={20} strokeWidth={2.2} /> },
       { to: "/settings", label: "Settings", icon: <SettingsIcon size={20} strokeWidth={2.2} /> },
     ],
   },

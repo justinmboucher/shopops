@@ -1,3 +1,4 @@
+from django.db.models import Count, F, Max, Q
 from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -38,11 +39,27 @@ class ProjectViewSet(viewsets.ModelViewSet):
         except Shop.DoesNotExist:
             return Project.objects.none()
 
-        return (
+        qs = (
             Project.objects.filter(shop=shop)
             .select_related("template", "workflow", "current_stage", "customer")
+            .annotate(
+                total_stages=Count("workflow__stages", distinct=True),
+                current_stage_order=F("current_stage__order"),
+                cancel_stage_order=Max(
+                    "workflow__stages__order",
+                    filter=Q(workflow__stages__key__icontains="cancel")
+                    | Q(workflow__stages__name__icontains="cancel"),
+                ),
+            )
             .order_by("-created_at")
         )
+
+        # 🔹 NEW: filter by customer query param if present
+        customer_id = self.request.query_params.get("customer")
+        if customer_id:
+            qs = qs.filter(customer_id=customer_id)
+
+        return qs
 
     def perform_create(self, serializer):
         serializer.save()
@@ -251,3 +268,4 @@ class ProjectViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_201_CREATED,
         )
+    

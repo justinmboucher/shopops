@@ -72,10 +72,15 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 
 
 class CustomerSerializer(serializers.ModelSerializer):
-    # Annotated metrics coming from queryset in CustomerViewSet
     total_projects = serializers.IntegerField(read_only=True)
     total_products = serializers.IntegerField(read_only=True)
-    tenure_days = serializers.IntegerField(read_only=True)
+
+    total_sales = serializers.IntegerField(read_only=True)
+    lifetime_revenue = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
+    completed_projects = serializers.IntegerField(read_only=True)
+    orders_this_year = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Customer
@@ -96,9 +101,13 @@ class CustomerSerializer(serializers.ModelSerializer):
             "country",
             "avatar",
             "is_active",
+            # metrics
             "total_projects",
             "total_products",
-            "tenure_days",
+            "total_sales",
+            "lifetime_revenue",
+            "completed_projects",
+            "orders_this_year",
             "created_at",
             "updated_at",
         ]
@@ -107,10 +116,14 @@ class CustomerSerializer(serializers.ModelSerializer):
             "shop",
             "total_projects",
             "total_products",
-            "tenure_days",
+            "total_sales",
+            "lifetime_revenue",
+            "completed_projects",
+            "orders_this_year",
             "created_at",
             "updated_at",
         ]
+
 
 class SearchResultSerializer(serializers.Serializer):
     type = serializers.CharField()      # "customer", "project", "product", etc.

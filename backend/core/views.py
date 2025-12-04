@@ -1,6 +1,6 @@
 # core/views.py
 import re
-from django.db.models import Q
+from django.db.models import Q, Count, Sum
 from django.utils import timezone
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import api_view
@@ -107,21 +107,42 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
         qs = Customer.objects.filter(shop=shop)
 
-        # Metrics:
-        # - total_projects: number of projects linked to this customer
-        # - total_products: rough count of distinct "things" they’ve bought
-        #
-        # This assumes Project has:
-        #   customer = ForeignKey(Customer, related_name="projects", ...)
-        # and a template/product field, adjust as needed:
-        #   projects__template  or  projects__product_template  etc.
+        # Start-of-year boundary for "orders_this_year"
+        now = timezone.now()
+        """ start_of_year = now.replace(
+            month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+        ) """
+        current_year = now.year
+
         qs = qs.annotate(
+            # --- existing dashboard metrics (unchanged) ---
             total_projects=Count("projects", distinct=True),
-            # TODO: adjust "projects__template" to your actual field if different.
             total_products=Count("projects__template", distinct=True),
+
+            # --- NEW sales-based metrics ---
+            # number of Sale rows for this customer
+            total_sales=Count("sales", distinct=True),
+
+            # real revenue: sum of Sale.price
+            lifetime_revenue=Sum("sales__price"),
+
+            # sales in the current calendar year
+            orders_this_year=Count(
+                "projects",
+                filter=Q(projects__created_at__year=current_year),
+                distinct=True,
+            ),
+
+            # completed projects (for completion rate)
+            completed_projects=Count(
+                "projects",
+                filter=Q(projects__status="completed"),
+                distinct=True,
+            ),
         )
 
         return qs
+
 
     def perform_create(self, serializer):
         """

@@ -1,6 +1,8 @@
-/* === Customers page – full stylesheet ================================== */
+/* =========================
+   Customers list page
+   ========================= */
 
-/* ---------- Toolbar layout --------------------------------------------- */
+/* Toolbar */
 
 .customers-toolbar {
   padding: 1rem;
@@ -17,8 +19,6 @@
   flex-wrap: wrap;
 }
 
-/* Search + icon */
-
 .table-card__search {
   flex: 0 0 auto;
 }
@@ -33,7 +33,7 @@
   width: 100%;
   border-radius: 999px;
   border: 1px solid var(--color-border-subtle);
-  padding: 0.45rem 0.9rem 0.45rem 2.1rem; /* extra for icon */
+  padding: 0.45rem 0.9rem 0.45rem 2.1rem;
   font-size: 0.9rem;
   background-color: var(--color-bg-surface);
   color: var(--color-text-primary);
@@ -51,8 +51,6 @@
   color: var(--color-text-secondary);
   pointer-events: none;
 }
-
-/* Toolbar selects + count */
 
 .customers-toolbar-select {
   border-radius: 6px;
@@ -74,22 +72,15 @@
   gap: 0.3rem;
 }
 
-.customers-rows-per-page span {
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-}
-
+.customers-rows-per-page span,
 .customers-count {
   font-size: 0.8rem;
   color: var(--color-text-secondary);
 }
 
-/* Make sure the New Customer button stays pinned right */
 .table-card__toolbar .btn-primary {
   flex-shrink: 0;
 }
-
-/* Pagination row inside card */
 
 .table-card__pagination {
   margin-top: 0.5rem;
@@ -97,7 +88,7 @@
   justify-content: flex-end;
 }
 
-/* ---------- Customer cell (avatar, name, notes) ------------------------ */
+/* Customer cell */
 
 .customer-cell {
   display: flex;
@@ -106,7 +97,6 @@
 }
 
 .customer-avatar {
-  /* just layout overrides; no background or color here */
   border: 1px solid var(--color-border-subtle);
 }
 
@@ -131,8 +121,6 @@
   font-weight: 500;
 }
 
-/* VIP chip – white text, golden background */
-
 .badge--vip-chip {
   border-radius: 999px;
   padding: 0.1rem 0.5rem;
@@ -154,7 +142,16 @@
   text-overflow: ellipsis;
 }
 
-/* ---------- Contact block (email + phone) ------------------------------ */
+/* Analytics row on detail page */
+
+.customer-analytics-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Contact block (list table) */
 
 .customer-contact {
   display: flex;
@@ -171,7 +168,7 @@
   color: var(--color-text-secondary);
 }
 
-/* ---------- Actions cell (icons) -------------------------------------- */
+/* Row actions */
 
 .customers-actions-cell {
   white-space: nowrap;
@@ -182,7 +179,7 @@
   padding: 0.2rem;
 }
 
-/* ---------- Active toggle pill ---------------------------------------- */
+/* Active toggle */
 
 .toggle {
   border: none;
@@ -203,8 +200,6 @@
   transition: background-color 0.12s ease-out, border-color 0.12s ease-out;
 }
 
-/* Label positioning inside the toggle */
-
 .toggle__label {
   position: absolute;
   z-index: 2;
@@ -214,16 +209,14 @@
   transition: color 0.12s ease-out;
 }
 
-/* ON = yes on left */
 .toggle--on .toggle__label {
   left: 10px;
   color: #ffffff;
 }
 
-/* OFF = no on right */
 .toggle--off .toggle__label {
   right: 10px;
-  color: #6b7280; /* Tailwind slate-500 */
+  color: #6b7280;
 }
 
 .toggle__thumb {
@@ -238,37 +231,25 @@
   transition: transform 0.15s ease-out;
 }
 
-/* ON state */
-
 .toggle--on .toggle__track {
   background-color: #16a34a;
   border: 1px solid #16a34a;
-}
-
-.toggle--on .toggle__label {
-  color: #ffffff;
 }
 
 .toggle--on .toggle__thumb {
   transform: translateX(34px);
 }
 
-/* OFF state */
-
 .toggle--off .toggle__track {
   background-color: var(--color-bg-surface);
-  border: 1px solid var(--color-bg-muted);;
-}
-
-.toggle--off .toggle__label {
-  color: #6b7280;
+  border: 1px solid var(--color-bg-muted);
 }
 
 .toggle--off .toggle__thumb {
   transform: translateX(0);
 }
 
-/* ---------- Sort arrows ------------------------------------------------ */
+/* Sort arrows (list tables) */
 
 .table-sortable {
   cursor: pointer;
@@ -292,7 +273,7 @@
   opacity: 0.9;
 }
 
-/* Channel badges on Customers table */
+/* Channel badges */
 
 .badge {
   display: inline-flex;
@@ -310,32 +291,495 @@
   text-transform: capitalize;
 }
 
-/* Neutral / fallback */
 .badge--channel-neutral {
-  background-color: rgba(148, 163, 184, 0.15); /* slate-400-ish */
+  background-color: rgba(148, 163, 184, 0.15);
   color: var(--color-text-secondary);
 }
 
-/* Etsy – soft orange */
 .badge--channel-etsy {
   background-color: #f97316;
   color: #ffffff;
 }
 
-/* Instagram – purple-ish */
 .badge--channel-instagram {
   background-color: #a855f7;
   color: #ffffff;
 }
 
-/* Craft fair – green */
 .badge--channel-craftfair {
   background-color: #16a34a;
   color: #ffffff;
 }
 
-/* Referral – blue */
 .badge--channel-referral {
   background-color: #3b82f6;
   color: #ffffff;
+}
+
+/* =========================
+   Customer detail page
+   ========================= */
+
+/* Header */
+
+.customer-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.customer-detail-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.customer-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+}
+
+.btn-ghost-link {
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-ghost-link:hover {
+  color: var(--color-primary);
+}
+
+.customer-detail-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.customer-header-main {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 0.35rem;
+}
+
+.customer-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.customer-header-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.customer-header-sub {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.customer-vip-pill {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: #facc15;
+  color: #1f2937;
+  border: 1px solid #eab308;
+}
+
+/* Summary banner */
+
+.customer-summary-banner {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1.25rem;
+}
+
+.summary-metric-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.2rem;
+}
+
+.summary-metric-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.summary-metric-sub {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.15rem;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+.status-pill--active {
+  background-color: #bbf7d0;
+  color: #166534;
+}
+
+.status-pill--inactive {
+  background-color: #e5e7eb;
+  color: #4b5563;
+}
+
+/* Main grid */
+
+.customer-detail-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.1fr);
+  gap: 1.25rem;
+  align-items: flex-start;
+  margin-top: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .customer-summary-banner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .customer-detail-main-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .customer-contact-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Contact card */
+
+.customer-contact-card {
+  padding: 1rem 1.25rem;
+}
+
+.customer-contact-header {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.customer-contact-primary {
+  flex: 1;
+}
+
+.customer-contact-name {
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.customer-contact-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.customer-contact-channel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.customer-contact-channel-label {
+  font-weight: 500;
+}
+
+/* Two-column contact/shipping layout */
+
+.customer-contact-body {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+.customer-contact-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.customer-section-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+  font-weight: 600;          /* make Contact / Shipping address bold-ish */
+  margin-top: 1rem;
+  margin-bottom: 0.2rem;
+}
+
+.customer-contact-since {
+    font-style: italic;
+    font-size: 0.85rem;
+}
+
+.customer-contact-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.customer-contact-key {
+  min-width: 3.5rem;
+  font-weight: 500;
+}
+
+/* Add colon after Email / Phone labels */
+.customer-contact-key::after {
+  content: ":";
+  margin-right: 0.25rem;
+}
+
+.customer-contact-value {
+  color: var(--color-text-primary);
+}
+
+.customer-address {
+  white-space: pre-line;
+}
+
+.customer-address-empty {
+  color: var(--color-text-secondary);
+}
+
+/* Notes card */
+
+.customer-notes-card {
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.customer-notes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.icon-button.notes-edit-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 0.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+
+.icon-button.notes-edit-btn:hover {
+  background-color: rgba(37, 99, 235, 0.08);
+}
+
+.customer-notes-body {
+  font-size: 0.9rem;
+  min-height: 2.5rem;
+}
+
+.customer-notes-textarea {
+  width: 100%;
+  min-height: 7rem;
+  resize: vertical;
+  margin-top: 0.25rem;
+}
+
+.customer-notes-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.customer-notes-text {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: inherit;
+}
+
+.customer-notes-empty {
+  color: var(--color-text-secondary);
+}
+
+/* Edit modal flags */
+
+.customer-edit-flags {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Orders & projects card + table */
+
+.customer-orders-card {
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+}
+
+.customer-orders-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.customer-orders-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.customer-orders-empty {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.customer-orders-table th,
+.customer-orders-table td {
+  font-size: 0.85rem;
+}
+
+.customer-order-name {
+  font-weight: 500;
+}
+
+.customer-order-ref {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+/* Progress pill */
+
+.process-pill {
+  position: relative;
+  width: 100%;
+  max-width: 220px;
+  height: 6px;
+  border-radius: 999px;
+  background-color: rgba(148, 163, 184, 0.25);
+  overflow: hidden;
+}
+
+.process-pill__inner {
+  height: 100%;
+  border-radius: inherit;
+  width: 0%;
+  transition: width 0.25s ease-out, background-color 0.25s ease-out;
+}
+
+.process-pill__label {
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+/* Table styling inside orders card */
+
+.customer-orders-card .table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+}
+
+.customer-orders-card table.table thead th {
+  background-color: var(--color-bg-subtle, #f3f4f6);
+  background-image: none;           /* kill weird diagonal pattern/line */
+  color: var(--color-text-muted, #6b7280);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--color-border-subtle, #e5e7eb);
+  border-top: none;                 /* avoid extra line above header */
+}
+
+.customer-orders-card .table th,
+.customer-orders-card .table td {
+  color: var(--color-text-primary, #111827);
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+}
+
+/* Zebra rows */
+
+.customer-orders-card .table tbody tr:nth-child(odd) {
+  background-color: var(--color-bg-surface, #ffffff);
+}
+
+.customer-orders-card .table tbody tr:nth-child(even) {
+  background-color: var(--color-bg-subtle, #f9fafb);
+}
+
+.customer-orders-card .table tbody tr:hover {
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+/* Sortable header arrows (orders table) */
+
+.customer-orders-card th.sortable-header {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.customer-orders-card th.sortable-header::after {
+  content: "";
+  margin-left: 0.25rem;
+  font-size: 0.65rem;
+}
+
+.customer-orders-card th.sortable-header.is-asc::after {
+  content: "▲";
+}
+
+.customer-orders-card th.sortable-header.is-desc::after {
+  content: "▼";
+}
+
+/* Shared card chrome */
+
+.customer-summary-banner,
+.customer-contact-card,
+.customer-notes-card,
+.customer-orders-card,
+.customer-activity-card {
+  background-color: var(--color-bg-surface);
+  border-radius: 16px;
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.customer-activity-card {
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+}
+
+.customer-orders-card .table-striped tbody tr:hover {
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+[data-theme="dark"] .customer-orders-card .table-striped tbody tr:hover {
+  background-color: rgba(37, 99, 235, 0.14);
 }

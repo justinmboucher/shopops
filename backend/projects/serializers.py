@@ -19,11 +19,16 @@ class ProjectSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
+    # NEW: progress-related fields
+    total_stages = serializers.IntegerField(read_only=True)
+    current_stage_order = serializers.IntegerField(read_only=True)
+    cancel_stage_order = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Project
         fields = [
             "id",
-            "shop",  # read-only, derived from user
+            "shop",
             "template",
             "template_name",
             "workflow",
@@ -36,13 +41,10 @@ class ProjectSerializer(serializers.ModelSerializer):
             "quantity",
             "image",
             "due_date",
-
-            # NEW lifecycle fields
             "quoted_at",
             "confirmed_at",
             "started_at",
             "completed_at",
-
             "estimated_hours",
             "actual_hours",
             "status",
@@ -54,6 +56,11 @@ class ProjectSerializer(serializers.ModelSerializer):
             "notes",
             "created_at",
             "updated_at",
+
+            # NEW
+            "total_stages",
+            "current_stage_order",
+            "cancel_stage_order",
         ]
         read_only_fields = [
             "shop",
@@ -64,15 +71,15 @@ class ProjectSerializer(serializers.ModelSerializer):
             "cancel_reason",
             "cancel_stage",
             "cancelled_at",
-
-            # lifecycle timestamps handled by backend logic
             "quoted_at",
             "confirmed_at",
             "started_at",
             "completed_at",
-
             "created_at",
             "updated_at",
+            "total_stages",
+            "current_stage_order",
+            "cancel_stage_order",
         ]
 
     def validate(self, attrs):

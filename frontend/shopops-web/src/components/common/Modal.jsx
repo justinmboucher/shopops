@@ -20,7 +20,7 @@ function Modal({
   children,
   footer,
   size = "md",
-  variant = "default",
+  variant = "primary",
 }) {
   if (!open) return null;
 
