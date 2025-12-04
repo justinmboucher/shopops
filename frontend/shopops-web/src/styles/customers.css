@@ -1,0 +1,304 @@
+/* === Customers page – full stylesheet ================================== */
+
+/* ---------- Toolbar layout --------------------------------------------- */
+
+.customers-toolbar {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.customers-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Search + icon */
+
+.table-card__search {
+  flex: 0 0 auto;
+}
+
+.customers-search-wrapper {
+  position: relative;
+  width: 280px;
+  max-width: 100%;
+}
+
+.customers-search-wrapper input {
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-subtle);
+  padding: 0.45rem 0.9rem 0.45rem 2.1rem; /* extra for icon */
+  font-size: 0.9rem;
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+.customers-search-wrapper input::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.customers-search-icon {
+  position: absolute;
+  left: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+/* Toolbar selects + count */
+
+.customers-toolbar-select {
+  border-radius: 6px;
+  border: 1px solid var(--color-border-subtle);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  padding: 0.35rem 0.6rem;
+  font-size: 0.85rem;
+  min-width: 120px;
+}
+
+.customers-page-size-select {
+  min-width: 72px;
+}
+
+.customers-rows-per-page {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.customers-rows-per-page span {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.customers-count {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+/* Make sure the New Customer button stays pinned right */
+.table-card__toolbar .btn-primary {
+  flex-shrink: 0;
+}
+
+/* Pagination row inside card */
+
+.table-card__pagination {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ---------- Customer cell (avatar, name, notes) ------------------------ */
+
+.customer-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.customer-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background-color: var(--color-bg-muted);
+  border: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.customer-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.customer-main {
+  min-width: 0;
+}
+
+.customer-name-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.15rem;
+}
+
+.customer-name {
+  font-weight: 500;
+}
+
+/* VIP chip – white text, golden background */
+
+.badge--vip-chip {
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background-color: #fbbf24;
+  color: #ffffff;
+  border: none;
+}
+
+.customer-note {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Contact block (email + phone) ------------------------------ */
+
+.customer-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.customer-email {
+  font-size: 0.8rem;
+}
+
+.customer-phone {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+/* ---------- Actions cell (icons) -------------------------------------- */
+
+.customers-actions-cell {
+  white-space: nowrap;
+}
+
+.customers-icon-btn {
+  border-radius: 999px;
+  padding: 0.2rem;
+}
+
+/* ---------- Active toggle pill ---------------------------------------- */
+
+.toggle {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.toggle__track {
+  position: relative;
+  width: 64px;
+  height: 26px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  box-sizing: border-box;
+  transition: background-color 0.12s ease-out, border-color 0.12s ease-out;
+}
+
+/* Label positioning inside the toggle */
+
+.toggle__label {
+  position: absolute;
+  z-index: 2;
+  font-size: 0.75rem;
+  font-weight: 600;
+  pointer-events: none;
+  transition: color 0.12s ease-out;
+}
+
+/* ON = yes on left */
+.toggle--on .toggle__label {
+  left: 10px;
+  color: #ffffff;
+}
+
+/* OFF = no on right */
+.toggle--off .toggle__label {
+  right: 10px;
+  color: #6b7280; /* Tailwind slate-500 */
+}
+
+.toggle__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+  transition: transform 0.15s ease-out;
+}
+
+/* ON state */
+
+.toggle--on .toggle__track {
+  background-color: #16a34a;
+  border: 1px solid #16a34a;
+}
+
+.toggle--on .toggle__label {
+  color: #ffffff;
+}
+
+.toggle--on .toggle__thumb {
+  transform: translateX(34px);
+}
+
+/* OFF state */
+
+.toggle--off .toggle__track {
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-bg-muted);;
+}
+
+.toggle--off .toggle__label {
+  color: #6b7280;
+}
+
+.toggle--off .toggle__thumb {
+  transform: translateX(0);
+}
+
+/* ---------- Sort arrows ------------------------------------------------ */
+
+.table-sortable {
+  cursor: pointer;
+  position: relative;
+}
+
+.table-sortable::after {
+  content: "";
+  margin-left: 4px;
+  font-size: 0.8rem;
+  opacity: 0.4;
+}
+
+.table-sortable.sorted-asc::after {
+  content: "▲";
+  opacity: 0.9;
+}
+
+.table-sortable.sorted-desc::after {
+  content: "▼";
+  opacity: 0.9;
+}
