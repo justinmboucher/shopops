@@ -741,7 +741,7 @@ export default function CustomerDetail() {
   }
 
   return (
-    <div className="page">
+    <div className="page page--customer-detail">
       {/* Header with back link, avatar, name, and edit button */}
       <div className="customer-detail-header">
         <div className="customer-detail-header-left">
@@ -867,12 +867,12 @@ export default function CustomerDetail() {
         <div className="settings-card customer-contact-card">
           <div className="customer-contact-header">
             <div className="customer-contact-primary">
-              <div className="customer-contact-name">
-                Contact Details
-              </div>
-              
+              <div className="customer-contact-name">Contact details</div>
+
               <div className="customer-contact-meta">
-                <div className="customer-contact-since">Customer since {formatDate(customer.created_at)}</div>
+                <div className="customer-contact-since">
+                  Customer since {formatDate(customer.created_at)}
+                </div>
 
                 {customer.channel && (
                   <div className="customer-contact-channel">
@@ -886,19 +886,39 @@ export default function CustomerDetail() {
                 )}
               </div>
             </div>
+
+            {/* optional quick actions */}
+            <div className="customer-contact-actions">
+              {customer.email && (
+                <a
+                  href={`mailto:${customer.email}`}
+                  className="btn btn-ghost btn-xs"
+                >
+                  Email
+                </a>
+              )}
+              {customer.phone && (
+                <a
+                  href={`tel:${customer.phone}`}
+                  className="btn btn-ghost btn-xs"
+                >
+                  Call
+                </a>
+              )}
+            </div>
           </div>
 
           <div className="customer-contact-body">
             <div className="customer-contact-section">
-              <div className="customer-section-label">Contact Info</div>
+              <div className="customer-section-label">Contact info</div>
               <div className="customer-contact-row">
-                <span className="customer-contact-key">Email</span>
+                <span className="customer-contact-key">Email:</span>
                 <span className="customer-contact-value">
                   {customer.email || "—"}
                 </span>
               </div>
               <div className="customer-contact-row">
-                <span className="customer-contact-key">Phone</span>
+                <span className="customer-contact-key">Phone:</span>
                 <span className="customer-contact-value">
                   {formatPhoneMask(customer.phone) || "—"}
                 </span>

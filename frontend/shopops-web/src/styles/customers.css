@@ -1,9 +1,8 @@
-/* =========================
+/* =======================================================
    Customers list page
-   ========================= */
+   ======================================================= */
 
 /* Toolbar */
-
 .customers-toolbar {
   padding: 1rem;
   display: flex;
@@ -88,8 +87,7 @@
   justify-content: flex-end;
 }
 
-/* Customer cell */
-
+/* Customer row (list) */
 .customer-cell {
   display: flex;
   align-items: flex-start;
@@ -121,6 +119,7 @@
   font-weight: 500;
 }
 
+/* VIP chip (list + detail) */
 .badge--vip-chip {
   border-radius: 999px;
   padding: 0.1rem 0.5rem;
@@ -142,17 +141,7 @@
   text-overflow: ellipsis;
 }
 
-/* Analytics row on detail page */
-
-.customer-analytics-row {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
 /* Contact block (list table) */
-
 .customer-contact {
   display: flex;
   flex-direction: column;
@@ -169,7 +158,6 @@
 }
 
 /* Row actions */
-
 .customers-actions-cell {
   white-space: nowrap;
 }
@@ -180,7 +168,6 @@
 }
 
 /* Active toggle */
-
 .toggle {
   border: none;
   background: transparent;
@@ -250,7 +237,6 @@
 }
 
 /* Sort arrows (list tables) */
-
 .table-sortable {
   cursor: pointer;
   position: relative;
@@ -274,7 +260,6 @@
 }
 
 /* Channel badges */
-
 .badge {
   display: inline-flex;
   align-items: center;
@@ -316,17 +301,39 @@
   color: #ffffff;
 }
 
-/* =========================
+/* Analytics row (detail header metrics use MetricCard, but this is reused) */
+.customer-analytics-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* =======================================================
    Customer detail page
-   ========================= */
+   ======================================================= */
 
-/* Header */
+/* Page wrapper */
+.page--customer-detail {
+  padding-top: 0.75rem;
+}
 
+/* Header band */
 .customer-detail-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(
+    to bottom,
+    var(--color-bg-page) 85%,
+    transparent 100%
+  );
 }
 
 .customer-detail-header-left {
@@ -360,6 +367,7 @@
   gap: 0.35rem;
 }
 
+/* Header avatar + text */
 .customer-header-main {
   display: flex;
   align-items: center;
@@ -389,12 +397,12 @@
   border-radius: 999px;
   font-size: 0.75rem;
   background: #facc15;
-  color: #1f2937;
+  color: #ffffff;
   border: 1px solid #eab308;
+  margin-top: 0.6rem;
 }
 
-/* Summary banner */
-
+/* Summary banner (projects / products / tenure / status) */
 .customer-summary-banner {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -442,8 +450,7 @@
   color: #4b5563;
 }
 
-/* Main grid */
-
+/* Main grid: contact + notes */
 .customer-detail-main-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.1fr);
@@ -461,22 +468,19 @@
   .customer-detail-main-grid {
     grid-template-columns: minmax(0, 1fr);
   }
-
-  .customer-contact-body {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 /* Contact card */
-
 .customer-contact-card {
   padding: 1rem 1.25rem;
 }
 
+/* Header row of contact card */
 .customer-contact-header {
   display: flex;
-  gap: 1rem;
-  align-items: center;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
 }
 
 .customer-contact-primary {
@@ -488,12 +492,20 @@
   margin-bottom: 0.15rem;
 }
 
+/* "Customer since" + "Source" on separate lines */
 .customer-contact-meta {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.15rem;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
 }
 
+.customer-contact-since {
+  font-style: italic;
+}
+
+/* Source chip row */
 .customer-contact-channel {
   display: inline-flex;
   align-items: center;
@@ -504,8 +516,18 @@
   font-weight: 500;
 }
 
-/* Two-column contact/shipping layout */
+/* Optional tiny buttons (Email / Call) */
+.customer-contact-actions {
+  display: inline-flex;
+  gap: 0.4rem;
+}
 
+.btn.btn-xs {
+  padding: 0.15rem 0.55rem;
+  font-size: 0.75rem;
+}
+
+/* Two-column contact vs address */
 .customer-contact-body {
   font-size: 0.85rem;
   color: var(--color-text-secondary);
@@ -522,18 +544,13 @@
 }
 
 .customer-section-label {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-text-secondary);
-  font-weight: 600;          /* make Contact / Shipping address bold-ish */
-  margin-top: 1rem;
+  font-weight: 600;
+  margin-top: 0.2rem;
   margin-bottom: 0.2rem;
-}
-
-.customer-contact-since {
-    font-style: italic;
-    font-size: 0.85rem;
 }
 
 .customer-contact-row {
@@ -542,7 +559,7 @@
 }
 
 .customer-contact-key {
-  min-width: 3.5rem;
+  min-width: 3.8rem;
   font-weight: 500;
 }
 
@@ -564,8 +581,22 @@
   color: var(--color-text-secondary);
 }
 
-/* Notes card */
+@media (max-width: 900px) {
+  .customer-contact-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
 
+  .customer-contact-header {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .customer-contact-actions {
+    align-self: flex-start;
+  }
+}
+
+/* Notes card */
 .customer-notes-card {
   padding: 1rem 1.25rem;
   display: flex;
@@ -579,6 +610,7 @@
   justify-content: space-between;
 }
 
+/* Pencil icon button */
 .icon-button.notes-edit-btn {
   border: none;
   background: transparent;
@@ -597,7 +629,7 @@
 
 .customer-notes-body {
   font-size: 0.9rem;
-  min-height: 2.5rem;
+  min-height: 3rem;
 }
 
 .customer-notes-textarea {
@@ -625,7 +657,6 @@
 }
 
 /* Edit modal flags */
-
 .customer-edit-flags {
   display: flex;
   gap: 1.5rem;
@@ -634,7 +665,6 @@
 }
 
 /* Orders & projects card + table */
-
 .customer-orders-card {
   margin-top: 1.5rem;
   padding: 1rem 1.25rem;
@@ -657,22 +687,7 @@
   color: var(--color-text-secondary);
 }
 
-.customer-orders-table th,
-.customer-orders-table td {
-  font-size: 0.85rem;
-}
-
-.customer-order-name {
-  font-weight: 500;
-}
-
-.customer-order-ref {
-  font-size: 0.75rem;
-  color: var(--color-text-secondary);
-}
-
-/* Progress pill */
-
+/* Progress pill (unused if you use inline styles, but kept for future) */
 .process-pill {
   position: relative;
   width: 100%;
@@ -696,8 +711,7 @@
   color: var(--color-text-secondary);
 }
 
-/* Table styling inside orders card */
-
+/* Orders table */
 .customer-orders-card .table {
   width: 100%;
   border-collapse: collapse;
@@ -706,13 +720,13 @@
 
 .customer-orders-card table.table thead th {
   background-color: var(--color-bg-subtle, #f3f4f6);
-  background-image: none;           /* kill weird diagonal pattern/line */
+  background-image: none; /* kill weird diagonal line */
   color: var(--color-text-muted, #6b7280);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 1px solid var(--color-border-subtle, #e5e7eb);
-  border-top: none;                 /* avoid extra line above header */
+  border-top: none;
 }
 
 .customer-orders-card .table th,
@@ -720,10 +734,10 @@
   color: var(--color-text-primary, #111827);
   padding-top: 0.6rem;
   padding-bottom: 0.6rem;
+  font-size: 0.85rem;
 }
 
 /* Zebra rows */
-
 .customer-orders-card .table tbody tr:nth-child(odd) {
   background-color: var(--color-bg-surface, #ffffff);
 }
@@ -732,12 +746,27 @@
   background-color: var(--color-bg-subtle, #f9fafb);
 }
 
-.customer-orders-card .table tbody tr:hover {
+/* Hover + clickable rows */
+.customer-project-row {
+  cursor: pointer;
+  transition: background-color 0.12s ease-out;
+}
+
+.customer-project-row:hover {
   background-color: rgba(37, 99, 235, 0.05);
 }
 
-/* Sortable header arrows (orders table) */
+/* Project name + template subline */
+.customer-order-name {
+  font-weight: 500;
+}
 
+.customer-order-ref {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+/* Sortable header arrows (orders table) */
 .customer-orders-card th.sortable-header {
   cursor: pointer;
   user-select: none;
@@ -758,8 +787,67 @@
   content: "▼";
 }
 
-/* Shared card chrome */
+/* Status pills */
+.badge--status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-transform: capitalize;
+  border-width: 1px;
+  border-style: solid;
+}
 
+.badge--status-new {
+  background-color: rgba(59, 130, 246, 0.08);
+  color: #1d4ed8;
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.badge--status-inprogress {
+  background-color: rgba(79, 70, 229, 0.08);
+  color: #4338ca;
+  border-color: rgba(79, 70, 229, 0.35);
+}
+
+.badge--status-waiting {
+  background-color: rgba(245, 158, 11, 0.08);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.badge--status-completed {
+  background-color: rgba(22, 163, 74, 0.08);
+  color: #15803d;
+  border-color: rgba(22, 163, 74, 0.35);
+}
+
+.badge--status-archived {
+  background-color: rgba(148, 163, 184, 0.12);
+  color: #4b5563;
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+/* Recent activity card */
+.customer-activity-card {
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+}
+
+.customer-activity-list {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.customer-activity-list li {
+  margin-bottom: 0.15rem;
+}
+
+/* Shared card chrome (detail) */
 .customer-summary-banner,
 .customer-contact-card,
 .customer-notes-card,
@@ -771,11 +859,7 @@
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
 }
 
-.customer-activity-card {
-  margin-top: 1.5rem;
-  padding: 1rem 1.25rem;
-}
-
+/* Hover override for striped tables (if table-striped is used) */
 .customer-orders-card .table-striped tbody tr:hover {
   background-color: rgba(37, 99, 235, 0.05);
 }
